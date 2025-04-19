@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { FormData, AgeCategory, Gender } from "@/types/form-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -11,10 +9,10 @@ import { AGE_CATEGORIES, FARMACOGENETICA_OPTIONS, ELEKTROLYTEN_OPTIONS, CVRM_OPT
 interface Props {
   type: "public" | "hospital";
   onSubmit: (data: FormData) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-const MedicationReviewForm = ({ type, onSubmit }: Props) => {
-  const navigate = useNavigate();
+const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     ageCategory: "18-60",
@@ -48,14 +46,16 @@ const MedicationReviewForm = ({ type, onSubmit }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await onSubmit(formData);
-      navigate("/resultaat");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
-      setLoading(false);
+    if (!isSubmitting) {
+      setLoading(true);
+      try {
+        await onSubmit(formData);
+        navigate("/resultaat");
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -279,8 +279,8 @@ const MedicationReviewForm = ({ type, onSubmit }: Props) => {
       </div>
 
       <div className="flex justify-end">
-        <ButtonCTA className={loading ? 'opacity-75 cursor-not-allowed' : ''}>
-          {loading ? (
+        <ButtonCTA className={isSubmitting ? 'opacity-75 cursor-not-allowed' : ''} type="submit">
+          {isSubmitting ? (
             <span className="flex items-center">
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

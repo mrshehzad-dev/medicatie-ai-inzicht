@@ -3,53 +3,80 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
 import { FormData } from "@/types/form-types";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const FormHospital = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
   const handleSubmit = async (formData: FormData) => {
-    const response = await fetch("https://hook.eu2.make.com/h84jtchvyxhlnd7w6nnrdvywlw5phcl6", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      setIsSubmitting(true);
+      console.log("Submitting data to hospital webhook:", formData);
+      
+      const response = await fetch("https://hook.eu2.make.com/h84jtchvyxhlnd7w6nnrdvywlw5phcl6", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
 
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Network response error: ${response.status}`);
+      }
+
+      // Simulate a generated answer
+      const result = {
+        generatedContent: `
+          # Medicatiebeoordeling Ziekenhuis
+
+          ## Patiëntgegevens
+          - Leeftijd: ${formData.ageCategory}
+          - Gewicht: ${formData.weight} kg
+          - Nierfunctie: ${formData.kidneyFunction} eGFR
+          - Geslacht: ${formData.gender === 'Male' ? 'Man' : 'Vrouw'}
+          
+          ## Medicatiebeoordeling
+          Gebaseerd op de verstrekte informatie hebben we de volgende aandachtspunten geïdentificeerd:
+          
+          1. **Farmacogenetica**: ${formData.farmacogenetica.join(', ')}
+          2. **Leverfunctie**: ALT: ${formData.liverFunction.alt}, AST: ${formData.liverFunction.ast}
+          3. **Elektrolyten**: ${formData.elektrolyten.join(', ')}
+          4. **CVRM**: ${formData.cvrm.join(', ')}
+          5. **Diabetes**: ${formData.diabetes.join(', ')}
+          
+          ## Huidige Medicatie
+          ${formData.currentMedication}
+          
+          ## Anamnese
+          ${formData.anamnesisSummary}
+          
+          ## Aanvullende Informatie
+          ${formData.additionalInfo}
+        `
+      };
+
+      localStorage.setItem("medicatiebeoordelingResultaat", result.generatedContent);
+      toast({
+        title: "Formulier verzonden",
+        description: "Uw medicatiebeoordeling wordt gegenereerd",
+      });
+      navigate("/resultaat");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Fout bij verzenden",
+        description: "Er is een fout opgetreden bij het verzenden van het formulier. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Simuleer een gegenereerd antwoord
-    const result = {
-      generatedContent: `
-        # Medicatiebeoordeling Ziekenhuis
-
-        ## Patiëntgegevens
-        - Leeftijd: ${formData.ageCategory}
-        - Gewicht: ${formData.weight} kg
-        - Nierfunctie: ${formData.kidneyFunction} eGFR
-        - Geslacht: ${formData.gender === 'Male' ? 'Man' : 'Vrouw'}
-        
-        ## Medicatiebeoordeling
-        Gebaseerd op de verstrekte informatie hebben we de volgende aandachtspunten geïdentificeerd:
-        
-        1. **Farmacogenetica**: ${formData.farmacogenetica.join(', ')}
-        2. **Leverfunctie**: ALT: ${formData.liverFunction.alt}, AST: ${formData.liverFunction.ast}
-        3. **Elektrolyten**: ${formData.elektrolyten.join(', ')}
-        4. **CVRM**: ${formData.cvrm.join(', ')}
-        5. **Diabetes**: ${formData.diabetes.join(', ')}
-        
-        ## Huidige Medicatie
-        ${formData.currentMedication}
-        
-        ## Anamnese
-        ${formData.anamnesisSummary}
-        
-        ## Aanvullende Informatie
-        ${formData.additionalInfo}
-      `
-    };
-
-    localStorage.setItem("medicatiebeoordelingResultaat", result.generatedContent);
   };
 
   return (
@@ -65,7 +92,7 @@ const FormHospital = () => {
               <p className="text-gray-600 mb-8">
                 Vul alle relevante informatie in over uw patiënt en diens medicatie om een AI-gegenereerde medicatiebeoordeling te ontvangen.
               </p>
-              <MedicationReviewForm type="hospital" onSubmit={handleSubmit} />
+              <MedicationReviewForm type="hospital" onSubmit={handleSubmit} isSubmitting={isSubmitting} />
             </div>
           </div>
         </div>

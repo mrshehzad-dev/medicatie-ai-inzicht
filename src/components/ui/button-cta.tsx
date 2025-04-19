@@ -9,6 +9,8 @@ interface ButtonProps {
   onClick?: () => void;
   variant?: "primary" | "secondary" | "outline";
   className?: string;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
 const ButtonCTA = ({
@@ -17,6 +19,8 @@ const ButtonCTA = ({
   onClick,
   variant = "primary",
   className,
+  type = "button",
+  disabled,
 }: ButtonProps) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md px-6 py-3 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
   
@@ -37,7 +41,7 @@ const ButtonCTA = ({
   }
   
   return (
-    <button type="button" className={styles} onClick={onClick}>
+    <button type={type} className={styles} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );
