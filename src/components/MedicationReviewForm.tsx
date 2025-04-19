@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { FormData, AgeCategory, Gender } from "@/types/form-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -50,7 +51,7 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
       setLoading(true);
       try {
         await onSubmit(formData);
-        navigate("/resultaat");
+        // Removed the navigate call - this will be handled in the parent component
       } catch (error) {
         console.error("Error submitting form:", error);
       } finally {
