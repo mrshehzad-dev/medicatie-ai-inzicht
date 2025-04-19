@@ -6,8 +6,7 @@ import { FormData } from "@/types/form-types";
 
 const FormHospital = () => {
   const handleSubmit = async (formData: FormData) => {
-    // In een echte applicatie zou dit naar een echte backend URL gaan
-    const response = await fetch("https://yourdomain.com/webhook-hospital", {
+    const response = await fetch("https://hook.eu2.make.com/h84jtchvyxhlnd7w6nnrdvywlw5phcl6", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
