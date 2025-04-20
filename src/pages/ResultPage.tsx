@@ -5,25 +5,38 @@ import Footer from "@/components/Footer";
 import ButtonCTA from "@/components/ui/button-cta";
 import { useNavigate } from "react-router-dom";
 import { marked } from "marked";
+import { useToast } from "@/hooks/use-toast";
 
 const ResultPage = () => {
   const navigate = useNavigate();
   const [resultContent, setResultContent] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
+    // Try to get the result from localStorage
     const content = localStorage.getItem("medicatiebeoordelingResultaat");
+    const automationResponse = localStorage.getItem("automationResponse");
     
-    if (!content) {
+    if (!content && !automationResponse) {
+      toast({
+        title: "Geen resultaten gevonden",
+        description: "Er zijn geen resultaten gevonden. U wordt doorverwezen naar de startpagina.",
+        variant: "destructive",
+      });
       navigate("/");
       return;
     }
     
-    setResultContent(content);
+    // Prioritize the automation response if available
+    const displayContent = automationResponse || content;
+    setResultContent(displayContent || "");
     
-    // Converteer markdown naar HTML
-    setHtmlContent(marked.parse(content) as string);
-  }, [navigate]);
+    // Convert markdown to HTML
+    if (displayContent) {
+      setHtmlContent(marked.parse(displayContent) as string);
+    }
+  }, [navigate, toast]);
 
   const handleDownloadPDF = () => {
     // In een echte applicatie zou dit een PDF downloaden
@@ -31,7 +44,9 @@ const ResultPage = () => {
   };
 
   const handleNewBeoordeling = () => {
+    // Clear both result types from localStorage
     localStorage.removeItem("medicatiebeoordelingResultaat");
+    localStorage.removeItem("automationResponse");
     navigate("/keuze");
   };
 
@@ -59,7 +74,10 @@ const ResultPage = () => {
                     onClick={() => {
                       if (navigator.clipboard) {
                         navigator.clipboard.writeText(resultContent);
-                        alert("Rapport is gekopieerd naar het klembord!");
+                        toast({
+                          title: "Gekopieerd",
+                          description: "Rapport is gekopieerd naar het klembord!",
+                        });
                       }
                     }}
                     className="text-primary hover:text-blue-700 font-medium flex items-center"

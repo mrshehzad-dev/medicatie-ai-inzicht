@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FormData, AgeCategory, Gender } from "@/types/form-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ButtonCTA from "@/components/ui/button-cta";
 import { AGE_CATEGORIES, FARMACOGENETICA_OPTIONS, ELEKTROLYTEN_OPTIONS, CVRM_OPTIONS, DIABETES_OPTIONS } from "@/lib/constants";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   type: "public" | "hospital";
@@ -15,6 +15,7 @@ interface Props {
 
 const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) => {
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState<FormData>({
     ageCategory: "18-60",
     weight: 0,
@@ -50,10 +51,22 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
     if (!isSubmitting) {
       setLoading(true);
       try {
+        const formDataString = JSON.stringify(formData);
+        localStorage.setItem("medicatiebeoordelingResultaat", formDataString);
+        
         await onSubmit(formData);
-        // Removed the navigate call - this will be handled in the parent component
+        
+        toast({
+          title: "Formulier verzonden",
+          description: "Uw medicatiebeoordeling wordt verwerkt.",
+        });
       } catch (error) {
         console.error("Error submitting form:", error);
+        toast({
+          title: "Fout bij verzenden",
+          description: "Er is een fout opgetreden bij het verzenden van het formulier. Probeer het opnieuw.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
