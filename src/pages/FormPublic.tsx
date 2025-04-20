@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
@@ -5,16 +6,22 @@ import { FormData } from "@/types/form-types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 const FormPublic = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showProgress, setShowProgress] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+    setShowProgress(true);
+    setProgress(10);
+    
     try {
-      // Start with formatting the data for display
+      // Start with formatting the data for display (as fallback)
       const formattedData = Object.entries(data)
         .map(([key, value]) => {
           if (key === 'liverFunction') {
@@ -28,42 +35,93 @@ const FormPublic = () => {
         })
         .join('\n\n');
 
-      // Store this as a fallback
+      // Store formatted data as fallback
       localStorage.setItem('medicatiebeoordelingResultaat', formattedData);
       
       console.log("Sending data to webhook:", data);
+      setProgress(30);
       
-      // Add no-cors mode to handle CORS issues
-      const response = await fetch('https://hook.eu2.make.com/26uhp1jcb38172h0l5f2iakjd789k08r', {
+      // Use a timeout-based approach with fetch to ensure we wait for a response
+      const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 60000) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        
+        try {
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+          });
+          clearTimeout(id);
+          return response;
+        } catch (error) {
+          clearTimeout(id);
+          throw error;
+        }
+      };
+      
+      // Send data to the webhook
+      const webhookResponse = await fetchWithTimeout('https://hook.eu2.make.com/26uhp1jcb38172h0l5f2iakjd789k08r', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        mode: 'no-cors', // Add this to handle CORS issues
         body: JSON.stringify(data),
-      });
+      }, 45000); // 45 second timeout
       
-      // Since we're using no-cors, we can't access response status directly
-      // So we'll store the formatted data as a fallback
-      console.log("Webhook request sent (no response due to no-cors mode)");
+      setProgress(70);
       
-      // Store a simple success message as a fallback since we won't get real response with no-cors
-      localStorage.setItem('automationResponse', 'Medicatiebeoordeling succesvol verwerkt. Bekijk de resultaten hieronder.');
-      
-      toast({
-        title: "Succes",
-        description: "De medicatiebeoordeling is succesvol verwerkt.",
-      });
-      
-      // Navigate to the result page
-      navigate('/resultaat');
+      if (webhookResponse.ok) {
+        console.log("Webhook response successful");
+        // Get the response data and store it
+        const responseData = await webhookResponse.text();
+        console.log("Response data:", responseData);
+        localStorage.setItem('automationResponse', responseData || formattedData);
+        
+        setProgress(100);
+        
+        toast({
+          title: "Succes",
+          description: "De medicatiebeoordeling is succesvol verwerkt.",
+        });
+        
+        // Navigate to the result page after a brief delay to show progress completion
+        setTimeout(() => {
+          navigate('/resultaat');
+        }, 500);
+      } else {
+        console.error("Webhook response not OK:", webhookResponse.status, webhookResponse.statusText);
+        // If webhook fails, still use the formatted data
+        localStorage.setItem('automationResponse', formattedData);
+        setProgress(100);
+        
+        toast({
+          title: "Beperkte respons",
+          description: "De volledige medicatiebeoordeling kon niet worden opgehaald, maar we tonen de basis informatie.",
+          variant: "destructive",
+        });
+        
+        // Still navigate to result page after a brief delay
+        setTimeout(() => {
+          navigate('/resultaat');
+        }, 500);
+      }
     } catch (error) {
       console.error('Error:', error);
-      toast({
-        title: "Fout",
-        description: "Er is een fout opgetreden. Probeer het opnieuw.",
-        variant: "destructive",
-      });
+      setProgress(100);
+      
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        toast({
+          title: "Timeout",
+          description: "De server reageerde niet binnen de verwachte tijd. Probeer het later opnieuw.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Fout",
+          description: "Er is een fout opgetreden. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -85,6 +143,16 @@ const FormPublic = () => {
             
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="p-8">
+                {showProgress && (
+                  <div className="mb-8">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      {progress < 100 
+                        ? "Medicatiebeoordeling wordt gegenereerd..." 
+                        : "Genereren voltooid!"}
+                    </p>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                )}
                 <MedicationReviewForm type="public" onSubmit={handleSubmit} isSubmitting={isSubmitting} />
               </div>
             </div>
