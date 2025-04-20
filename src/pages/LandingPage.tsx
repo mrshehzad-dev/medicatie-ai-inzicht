@@ -27,12 +27,12 @@ const LandingPage = () => {
               </ButtonCTA>
             </div>
             <div className="hidden md:block">
-              <div className="bg-white/10 p-6 rounded-lg shadow-lg">
+              <div className="rounded-lg shadow-md" style={{ boxShadow: "0 4px 20px rgba(234, 179, 8, 0.25)" }}>
                 <img 
                   src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop"
                   alt="Medicatiebeoordeling met AI" 
-                  className="w-full h-auto rounded object-cover"
-                  style={{ maxHeight: "400px" }}
+                  className="w-full h-auto rounded-lg object-cover"
+                  style={{ maxHeight: "400px", border: "1px solid rgba(234, 179, 8, 0.2)" }}
                 />
               </div>
             </div>
