@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
@@ -31,7 +32,9 @@ const FormHospital = () => {
       // Store this as a fallback
       localStorage.setItem('medicatiebeoordelingResultaat', formattedData);
       
-      // Send the data to the webhook
+      console.log("Sending data to webhook:", data);
+      
+      // Send the data to the webhook with proper headers and body
       const response = await fetch('https://hook.eu2.make.com/7jnw8qpba5xmyjyooi65l31eblalx9sa', {
         method: 'POST',
         headers: {
@@ -41,8 +44,10 @@ const FormHospital = () => {
       });
       
       if (response.ok) {
+        console.log("Webhook response successful");
         // Get the response data and store it
         const responseData = await response.text();
+        console.log("Response data:", responseData);
         localStorage.setItem('automationResponse', responseData);
         
         toast({
@@ -53,7 +58,8 @@ const FormHospital = () => {
         // Navigate to the result page
         navigate('/resultaat');
       } else {
-        throw new Error('Failed to submit form');
+        console.error("Webhook response not OK:", response.status, response.statusText);
+        throw new Error(`Failed to submit form: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error:', error);

@@ -51,8 +51,7 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
     if (!isSubmitting) {
       setLoading(true);
       try {
-        const formDataString = JSON.stringify(formData);
-        localStorage.setItem("medicatiebeoordelingResultaat", formDataString);
+        console.log("Form submitted with data:", formData);
         
         await onSubmit(formData);
         
@@ -293,8 +292,12 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
       </div>
 
       <div className="flex justify-end">
-        <ButtonCTA className={isSubmitting ? 'opacity-75 cursor-not-allowed' : ''} type="submit">
-          {isSubmitting ? (
+        <ButtonCTA 
+          className={isSubmitting || loading ? 'opacity-75 cursor-not-allowed' : ''} 
+          type="submit"
+          disabled={isSubmitting || loading}
+        >
+          {isSubmitting || loading ? (
             <span className="flex items-center">
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

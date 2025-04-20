@@ -29,9 +29,10 @@ const LandingPage = () => {
             <div className="hidden md:block">
               <div className="bg-white/10 p-6 rounded-lg shadow-lg">
                 <img 
-                  src="https://images.unsplash.com/photo-1492321936769-b49830bc1d1e"
+                  src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop"
                   alt="Medicatiebeoordeling met AI" 
-                  className="w-full h-auto rounded"
+                  className="w-full h-auto rounded object-cover"
+                  style={{ maxHeight: "400px" }}
                 />
               </div>
             </div>
