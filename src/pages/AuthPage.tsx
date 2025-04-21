@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 const AuthPage = () => {
   const [email, setEmail] = useState("");
@@ -40,9 +41,21 @@ const AuthPage = () => {
     }
   };
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Button 
+          variant="ghost" 
+          onClick={goBack} 
+          className="absolute top-4 left-4 flex items-center gap-1"
+        >
+          <ArrowLeft size={16} />
+          Terug
+        </Button>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {isSignUp ? "Maak een account aan" : "Log in op uw account"}
         </h2>

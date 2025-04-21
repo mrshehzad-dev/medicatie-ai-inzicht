@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ButtonCTA from "@/components/ui/button-cta";
@@ -19,7 +20,7 @@ const LandingPage = () => {
               <p className="text-lg md:text-xl mb-8 opacity-90">
                 Revolutionaire AI-tool voor apothekers in Nederland. Voer snel en nauwkeurig medicatiebeoordelingen uit.
               </p>
-              <ButtonCTA to="/auth" variant="primary">
+              <ButtonCTA to="/keuze" requiresAuth={true} variant="primary">
                 Aan de slag
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -31,8 +32,12 @@ const LandingPage = () => {
                 <img 
                   src="/chatbot.png"
                   alt="AI Medicatiebeoordeling"
-                  className="w-full h-auto rounded-lg object-cover"
-                  style={{ maxHeight: "400px" }}
+                  className="w-full h-auto rounded-lg object-cover max-h-[400px]"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://www.svgrepo.com/show/310397/bot.svg";
+                    target.className = "w-full h-auto rounded-lg object-contain bg-white p-8 max-h-[400px]";
+                  }}
                 />
               </div>
             </div>
@@ -51,7 +56,7 @@ const LandingPage = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <Zap className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Snelle Analyse</h3>
+              <h3 className="text-xl font-semibold mb-2">⚡ Snelle Analyse</h3>
               <p className="text-gray-600">Medicatiebeoordelingen in seconden in plaats van uren. Bespaar kostbare tijd.</p>
             </div>
             
@@ -59,7 +64,7 @@ const LandingPage = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <ChartBar className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Nauwkeurige Resultaten</h3>
+              <h3 className="text-xl font-semibold mb-2">📊 Nauwkeurige Resultaten</h3>
               <p className="text-gray-600">Gebaseerd op de nieuwste wetenschappelijke inzichten en richtlijnen.</p>
             </div>
             
@@ -67,7 +72,7 @@ const LandingPage = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <User className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Speciaal voor Apothekers</h3>
+              <h3 className="text-xl font-semibold mb-2">🧑‍⚕️ Speciaal voor Apothekers</h3>
               <p className="text-gray-600">Ontwikkeld in samenwerking met Nederlandse apothekers voor de dagelijkse praktijk.</p>
             </div>
           </div>

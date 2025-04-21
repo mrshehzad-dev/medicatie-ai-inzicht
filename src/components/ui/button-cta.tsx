@@ -1,7 +1,8 @@
 
-import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ButtonProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface ButtonProps {
   className?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
+  requiresAuth?: boolean;
 }
 
 const ButtonCTA = ({
@@ -21,6 +23,7 @@ const ButtonCTA = ({
   className,
   type = "button",
   disabled,
+  requiresAuth = false,
 }: ButtonProps) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md px-6 py-3 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
   
@@ -32,6 +35,9 @@ const ButtonCTA = ({
   
   const styles = cn(baseStyles, variantStyles[variant], className);
   
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   // Check if we're in a valid router context
   let isRouterAvailable = true;
   try {
@@ -40,7 +46,17 @@ const ButtonCTA = ({
     isRouterAvailable = false;
   }
   
-  if (to) {
+  const handleClick = () => {
+    if (requiresAuth && !user && to) {
+      navigate('/auth');
+    } else if (onClick) {
+      onClick();
+    } else if (to) {
+      navigate(to);
+    }
+  };
+  
+  if (to && !requiresAuth) {
     if (isRouterAvailable) {
       return (
         <Link to={to} className={styles}>
@@ -57,7 +73,7 @@ const ButtonCTA = ({
   }
   
   return (
-    <button type={type} className={styles} onClick={onClick} disabled={disabled}>
+    <button type={type} className={styles} onClick={handleClick} disabled={disabled}>
       {children}
     </button>
   );
