@@ -30,6 +30,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          last_sign_in: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          last_sign_in?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_sign_in?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
