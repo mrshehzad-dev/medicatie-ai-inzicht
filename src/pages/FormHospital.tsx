@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
@@ -36,10 +37,11 @@ const FormHospital = () => {
         .join('\n\n');
 
       // First, insert the form data into the database
+      // Cast the data as any to avoid TypeScript errors with the Json type
       const { data: assessment, error: insertError } = await supabase
         .from('assessments')
         .insert({
-          form_data: data,
+          form_data: data as any,
           report_data: formattedData, // Use formatted data as initial value
         })
         .select('id')
