@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface ButtonProps {
@@ -32,12 +32,28 @@ const ButtonCTA = ({
   
   const styles = cn(baseStyles, variantStyles[variant], className);
   
+  // Check if we're in a valid router context
+  let isRouterAvailable = true;
+  try {
+    useLocation();
+  } catch (e) {
+    isRouterAvailable = false;
+  }
+  
   if (to) {
-    return (
-      <Link to={to} className={styles}>
-        {children}
-      </Link>
-    );
+    if (isRouterAvailable) {
+      return (
+        <Link to={to} className={styles}>
+          {children}
+        </Link>
+      );
+    } else {
+      return (
+        <a href={to} className={styles}>
+          {children}
+        </a>
+      );
+    }
   }
   
   return (

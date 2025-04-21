@@ -1,7 +1,23 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Footer = () => {
+  // Check if we're in a valid router context by trying to use a router hook
+  let isRouterAvailable = true;
+  try {
+    useLocation();
+  } catch (e) {
+    isRouterAvailable = false;
+  }
+
+  // Use regular anchor tags when router is not available
+  const LinkComponent = ({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) => {
+    if (isRouterAvailable) {
+      return <Link to={to} className={className}>{children}</Link>;
+    }
+    return <a href={to} className={className}>{children}</a>;
+  };
+
   return (
     <footer className="bg-primary text-white py-8">
       <div className="container mx-auto px-4">
@@ -15,9 +31,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-sm opacity-75 hover:opacity-100">Home</Link></li>
-              <li><Link to="/keuze" className="text-sm opacity-75 hover:opacity-100">Aan de slag</Link></li>
-              <li><Link to="/pricing" className="text-sm opacity-75 hover:opacity-100">Prijzen</Link></li>
+              <li><LinkComponent to="/" className="text-sm opacity-75 hover:opacity-100">Home</LinkComponent></li>
+              <li><LinkComponent to="/keuze" className="text-sm opacity-75 hover:opacity-100">Aan de slag</LinkComponent></li>
+              <li><LinkComponent to="/pricing" className="text-sm opacity-75 hover:opacity-100">Prijzen</LinkComponent></li>
             </ul>
           </div>
           <div>
