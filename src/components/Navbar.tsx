@@ -1,14 +1,31 @@
 
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserRound, LogOut } from "lucide-react";
+import ButtonCTA from "./ui/button-cta";
 
 const Navbar = () => {
-  // Check if we're in a valid router context by trying to use a router hook
+  const { user, loading } = useAuth();
+  const supabase = useAuth().supabase;
+  
+  // Check if we're in a valid router context
   let isRouterAvailable = true;
   try {
     useLocation();
   } catch (e) {
     isRouterAvailable = false;
   }
+  
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   // Use regular anchor tags when router is not available
   const LinkComponent = ({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) => {
@@ -27,11 +44,41 @@ const Navbar = () => {
           </svg>
           <span>MedicatieAI</span>
         </LinkComponent>
-        <div className="hidden md:flex space-x-8">
+        
+        <div className="hidden md:flex items-center space-x-8">
           <LinkComponent to="/" className="text-white hover:text-blue-100 transition">Home</LinkComponent>
           <LinkComponent to="/keuze" className="text-white hover:text-blue-100 transition">Aan de slag</LinkComponent>
           <LinkComponent to="/pricing" className="text-white hover:text-blue-100 transition">Prijzen</LinkComponent>
+          
+          {!user && !loading && (
+            <ButtonCTA to="/auth" variant="secondary">
+              Registreer nu
+            </ButtonCTA>
+          )}
+          
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
+                <Avatar>
+                  <AvatarFallback className="bg-secondary text-white">
+                    {user.email?.charAt(0).toUpperCase() ?? 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="text-sm text-gray-500 px-3 py-2">
+                  <UserRound className="mr-2 h-4 w-4" />
+                  {user.email}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-sm text-red-500 px-3 py-2">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Uitloggen
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
+
         <div className="md:hidden">
           <button className="text-white">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

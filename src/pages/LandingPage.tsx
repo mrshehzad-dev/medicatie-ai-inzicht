@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ButtonCTA from "@/components/ui/button-cta";
@@ -12,35 +11,19 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="bg-primary text-white py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Medicatiebeoordeling met AI
-              </h1>
-              <p className="text-lg md:text-xl mb-8 opacity-90">
-                Revolutionaire AI-tool voor apothekers in Nederland. Voer snel en nauwkeurig medicatiebeoordelingen uit.
-              </p>
-              <ButtonCTA to="/keuze" requiresAuth={true} variant="primary">
-                Aan de slag
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </ButtonCTA>
-            </div>
-            <div className="hidden md:block">
-              <div className="rounded-lg shadow-md">
-                <img 
-                  src="/chatbot.png"
-                  alt="AI Medicatiebeoordeling"
-                  className="w-full h-auto rounded-lg object-cover max-h-[400px]"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://www.svgrepo.com/show/310397/bot.svg";
-                    target.className = "w-full h-auto rounded-lg object-contain bg-white p-8 max-h-[400px]";
-                  }}
-                />
-              </div>
-            </div>
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Medicatiebeoordeling met AI
+            </h1>
+            <p className="text-lg md:text-xl mb-8 opacity-90">
+              Revolutionaire AI-tool voor apothekers in Nederland. Voer snel en nauwkeurig medicatiebeoordelingen uit.
+            </p>
+            <ButtonCTA to="/keuze" requiresAuth={true} variant="primary">
+              Aan de slag
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </ButtonCTA>
           </div>
         </div>
       </section>
