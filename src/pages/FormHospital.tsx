@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
@@ -76,14 +75,18 @@ const FormHospital = () => {
       };
       
       // Send data to the webhook
-      const webhookResponse = await fetchWithTimeout('https://hook.eu2.make.com/7jnw8qpba5xmyjyooi65l31eblalx9sa', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const webhookResponse = await fetchWithTimeout(
+        'https://hook.eu2.make.com/hypzmmevifaa0hdudq17xi3ur2dn4bte',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...data, assessmentId }),
         },
-        body: JSON.stringify({...data, assessmentId}),
-      }, 45000); // 45 second timeout
-      
+        45000
+      );
+
       setProgress(70);
       
       if (webhookResponse.ok) {
