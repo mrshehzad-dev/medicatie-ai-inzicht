@@ -5,8 +5,9 @@ import MedicationReviewForm from "@/components/MedicationReviewForm";
 import { FormData } from "@/types/form-types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 const FormPublic = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const FormPublic = () => {
     setProgress(10);
     
     try {
-      // Start with formatting the data for display (as fallback)
+      // Format data for display (as fallback)
       const formattedData = Object.entries(data)
         .map(([key, value]) => {
           if (key === 'liverFunction') {
@@ -35,10 +36,24 @@ const FormPublic = () => {
         })
         .join('\n\n');
 
-      // Store formatted data as fallback
-      localStorage.setItem('medicatiebeoordelingResultaat', formattedData);
+      // First, insert the form data into the database
+      const { data: assessment, error: insertError } = await supabase
+        .from('assessments')
+        .insert({
+          form_data: data,
+          report_data: formattedData, // Use formatted data as initial value
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error saving form data:', insertError);
+        throw new Error('Failed to save form data to database');
+      }
+
+      const assessmentId = assessment.id;
+      console.log("Assessment saved with ID:", assessmentId);
       
-      console.log("Sending data to webhook:", data);
       setProgress(30);
       
       // Use a timeout-based approach with fetch to ensure we wait for a response
@@ -65,17 +80,27 @@ const FormPublic = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({...data, assessmentId}),
       }, 45000); // 45 second timeout
       
       setProgress(70);
       
       if (webhookResponse.ok) {
         console.log("Webhook response successful");
-        // Get the response data and store it
+        // Get the response data
         const responseData = await webhookResponse.text();
         console.log("Response data:", responseData);
-        localStorage.setItem('automationResponse', responseData || formattedData);
+
+        // Update the assessment record with the report data
+        const { error: updateError } = await supabase
+          .from('assessments')
+          .update({ report_data: responseData || formattedData })
+          .eq('id', assessmentId);
+
+        if (updateError) {
+          console.error('Error updating report data:', updateError);
+          throw new Error('Failed to update report data in database');
+        }
         
         setProgress(100);
         
@@ -84,14 +109,17 @@ const FormPublic = () => {
           description: "De medicatiebeoordeling is succesvol verwerkt.",
         });
         
+        // Store the assessment ID in localStorage for the result page
+        localStorage.setItem('currentAssessmentId', assessmentId);
+        
         // Navigate to the result page after a brief delay to show progress completion
         setTimeout(() => {
           navigate('/resultaat');
         }, 500);
       } else {
         console.error("Webhook response not OK:", webhookResponse.status, webhookResponse.statusText);
+        
         // If webhook fails, still use the formatted data
-        localStorage.setItem('automationResponse', formattedData);
         setProgress(100);
         
         toast({
@@ -99,6 +127,9 @@ const FormPublic = () => {
           description: "De volledige medicatiebeoordeling kon niet worden opgehaald, maar we tonen de basis informatie.",
           variant: "destructive",
         });
+        
+        // Store the assessment ID in localStorage for the result page
+        localStorage.setItem('currentAssessmentId', assessmentId);
         
         // Still navigate to result page after a brief delay
         setTimeout(() => {
