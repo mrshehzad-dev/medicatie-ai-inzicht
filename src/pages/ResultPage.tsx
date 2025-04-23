@@ -1,24 +1,20 @@
+
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import ButtonCTA from "@/components/ui/button-cta";
 import { useNavigate } from "react-router-dom";
 import { marked } from "marked";
+import html2pdf from "html2pdf.js";
+import { Download, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Copy } from "lucide-react";
-import html2pdf from "html2pdf.js";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ButtonCTA from "@/components/ui/button-cta";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { parseStructuredContent } from "@/utils/resultParser";
+import { FTPSection } from "@/components/results/FTPSection";
+import { TreatmentPlanSection } from "@/components/results/TreatmentPlanSection";
+import { ConditionGuidelinesSection } from "@/components/results/ConditionGuidelinesSection";
+import { SideEffectsSection } from "@/components/results/SideEffectsSection";
 
 const ResultPage = () => {
   const navigate = useNavigate();
@@ -26,7 +22,7 @@ const ResultPage = () => {
   const [htmlContent, setHtmlContent] = useState("");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const [parsedSections, setParsedSections] = useState<any>({
+  const [parsedSections, setParsedSections] = useState<ReturnType<typeof parseStructuredContent>>({
     ftps: [],
     treatmentPlan: [],
     conditionGuidelines: [],
@@ -62,7 +58,7 @@ const ResultPage = () => {
         // Convert markdown to HTML
         if (displayContent) {
           setHtmlContent(marked.parse(displayContent) as string);
-          parseStructuredContent(displayContent);
+          setParsedSections(parseStructuredContent(displayContent));
         }
         
         setLoading(false);
@@ -94,7 +90,7 @@ const ResultPage = () => {
           
           if (displayContent) {
             setHtmlContent(marked.parse(displayContent) as string);
-            parseStructuredContent(displayContent);
+            setParsedSections(parseStructuredContent(displayContent));
           }
         } else {
           navigate("/");
@@ -103,7 +99,7 @@ const ResultPage = () => {
       } else if (assessment && assessment.report_data) {
         setResultContent(assessment.report_data);
         setHtmlContent(marked.parse(assessment.report_data) as string);
-        parseStructuredContent(assessment.report_data);
+        setParsedSections(parseStructuredContent(assessment.report_data));
       } else {
         toast({
           title: "Geen resultaten gevonden",
@@ -120,100 +116,6 @@ const ResultPage = () => {
     fetchResult();
   }, [navigate, toast]);
 
-  const parseStructuredContent = (content: string) => {
-    const sections: any = {
-      ftps: [],
-      treatmentPlan: [],
-      conditionGuidelines: [],
-      sideEffects: []
-    };
-    
-    try {
-      // Enhanced regular expressions to extract table data with section headers
-      const ftpMatch = content.match(/### 1\. FTP's[\s\S]*?(?=\n### 2\.|\n$)/);
-      const treatmentPlanMatch = content.match(/### 2\. Behandelplan[\s\S]*?(?=\n### 3\.|\n$)/);
-      const conditionGuidelinesMatch = content.match(/### 3\. Aandoening ↔ Richtlijn[\s\S]*?(?=\n### 4\.|\n$)/);
-      const sideEffectsMatch = content.match(/### 4\. Bijwerkingenanalyse[\s\S]*?(?=\n### 5\.|\n$)/);
-      
-      // Parse FTPs
-      if (ftpMatch && ftpMatch[0]) {
-        const rows = ftpMatch[0].split('\n').filter(row => row.includes('|'));
-        // Skip header and separator rows
-        for (let i = 2; i < rows.length; i++) {
-          const columns = rows[i].split('|').map(col => col.trim()).filter(col => col);
-          if (columns.length >= 5) {
-            sections.ftps.push({
-              nr: columns[0],
-              ftp: columns[1],
-              medication: columns[2],
-              relevantData: columns[3],
-              action: columns[4],
-              source: columns[5] || ''
-            });
-          }
-        }
-      }
-
-      // Parse Treatment Plan
-      if (treatmentPlanMatch && treatmentPlanMatch[0]) {
-        const rows = treatmentPlanMatch[0].split('\n').filter(row => row.includes('|'));
-        // Skip header and separator rows
-        for (let i = 2; i < rows.length; i++) {
-          const columns = rows[i].split('|').map(col => col.trim()).filter(col => col);
-          if (columns.length >= 4) {
-            sections.treatmentPlan.push({
-              nr: columns[0],
-              intervention: columns[1],
-              advantages: columns[2],
-              evaluation: columns[3],
-              source: columns[4] || ''
-            });
-          }
-        }
-      }
-
-      // Parse Condition Guidelines
-      if (conditionGuidelinesMatch && conditionGuidelinesMatch[0]) {
-        const rows = conditionGuidelinesMatch[0].split('\n').filter(row => row.includes('|'));
-        // Skip header and separator rows
-        for (let i = 2; i < rows.length; i++) {
-          const columns = rows[i].split('|').map(col => col.trim()).filter(col => col);
-          if (columns.length >= 3) {
-            sections.conditionGuidelines.push({
-              condition: columns[0],
-              guideline: columns[1],
-              deviation: columns[2]
-            });
-          }
-        }
-      }
-
-      // Parse Side Effects
-      if (sideEffectsMatch && sideEffectsMatch[0]) {
-        const rows = sideEffectsMatch[0].split('\n').filter(row => row.includes('|'));
-        // Skip header and separator rows
-        for (let i = 2; i < rows.length; i++) {
-          const columns = rows[i].split('|').map(col => col.trim()).filter(col => col);
-          if (columns.length >= 5) {
-            sections.sideEffects.push({
-              sideEffect: columns[0],
-              medications: columns[1],
-              timeline: columns[2],
-              alternativeCauses: columns[3],
-              monitoring: columns[4],
-              source: columns[5] || ''
-            });
-          }
-        }
-      }
-
-      setParsedSections(sections);
-    } catch (error) {
-      console.error("Error parsing structured content:", error);
-      // If parsing fails, we'll fall back to the regular rendering method
-    }
-  };
-
   const handleDownloadPDF = () => {
     const content = document.getElementById('report-content');
     
@@ -226,7 +128,6 @@ const ResultPage = () => {
       return;
     }
     
-    // Set options for PDF generation
     const options = {
       margin: [10, 10, 10, 10],
       filename: 'medicatiebeoordeling.pdf',
@@ -235,7 +136,6 @@ const ResultPage = () => {
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
-    // Generate PDF
     html2pdf()
       .set(options)
       .from(content)
@@ -257,158 +157,10 @@ const ResultPage = () => {
   };
 
   const handleNewBeoordeling = () => {
-    // Clear all stored data
     localStorage.removeItem("medicatiebeoordelingResultaat");
     localStorage.removeItem("automationResponse");
     localStorage.removeItem("currentAssessmentId");
     navigate("/keuze");
-  };
-
-  const renderStructuredResult = () => {
-    const { ftps, treatmentPlan, conditionGuidelines, sideEffects } = parsedSections;
-    const hasParsedData = ftps.length > 0 || treatmentPlan.length > 0 || conditionGuidelines.length > 0 || sideEffects.length > 0;
-    
-    if (!hasParsedData) {
-      // Fall back to regular HTML content if parsing failed
-      return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
-    }
-    
-    return (
-      <div className="space-y-8" id="report-content">
-        {/* FTPs Section */}
-        {ftps.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-primary">1. FTP's</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Nr.</TableHead>
-                    <TableHead>FTP</TableHead>
-                    <TableHead>Actuele medicatie</TableHead>
-                    <TableHead>Relevante data (lab, klinisch)</TableHead>
-                    <TableHead>STOP/START</TableHead>
-                    <TableHead className="w-20">Bron</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ftps.map((item: any, index: number) => (
-                    <TableRow key={`ftp-${index}`}>
-                      <TableCell>{item.nr}</TableCell>
-                      <TableCell>{item.ftp}</TableCell>
-                      <TableCell>{item.medication}</TableCell>
-                      <TableCell>{item.relevantData}</TableCell>
-                      <TableCell>{item.action}</TableCell>
-                      <TableCell>{item.source}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Treatment Plan Section */}
-        {treatmentPlan.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-primary">2. Behandelplan</CardTitle>
-              <div className="text-sm font-medium mb-2">Totaal aantal FTP's: {ftps.length}</div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Nr.</TableHead>
-                    <TableHead>Interventie (middel + dosis)</TableHead>
-                    <TableHead>Voordelen / Nadelen</TableHead>
-                    <TableHead>Evaluatie</TableHead>
-                    <TableHead className="w-20">Bron</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {treatmentPlan.map((item: any, index: number) => (
-                    <TableRow key={`treatment-${index}`}>
-                      <TableCell>{item.nr}</TableCell>
-                      <TableCell>{item.intervention}</TableCell>
-                      <TableCell>{item.advantages}</TableCell>
-                      <TableCell>{item.evaluation}</TableCell>
-                      <TableCell>{item.source}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Condition Guidelines Section */}
-        {conditionGuidelines.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-primary">3. Aandoening ↔ Richtlijn</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Aandoening</TableHead>
-                    <TableHead>Richtlijn­behandeling</TableHead>
-                    <TableHead>Afwijking & reden</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {conditionGuidelines.map((item: any, index: number) => (
-                    <TableRow key={`condition-${index}`}>
-                      <TableCell>{item.condition}</TableCell>
-                      <TableCell>{item.guideline}</TableCell>
-                      <TableCell>{item.deviation}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Side Effects Section */}
-        {sideEffects.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-primary">4. Bijwerkingenanalyse (BATM)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Bijwerking</TableHead>
-                    <TableHead>Mogelijke middelen</TableHead>
-                    <TableHead>Tijdsbeloop</TableHead>
-                    <TableHead>Alternatieve oorzaken</TableHead>
-                    <TableHead>Monitoring</TableHead>
-                    <TableHead className="w-20">Bron</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sideEffects.map((item: any, index: number) => (
-                    <TableRow key={`side-effect-${index}`}>
-                      <TableCell>{item.sideEffect}</TableCell>
-                      <TableCell>{item.medications}</TableCell>
-                      <TableCell>{item.timeline}</TableCell>
-                      <TableCell>{item.alternativeCauses}</TableCell>
-                      <TableCell>{item.monitoring}</TableCell>
-                      <TableCell>{item.source}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -466,7 +218,15 @@ const ResultPage = () => {
                     </div>
                   </div>
                 ) : (
-                  renderStructuredResult()
+                  <div id="report-content" className="space-y-8">
+                    <FTPSection ftps={parsedSections.ftps} />
+                    <TreatmentPlanSection 
+                      treatmentPlan={parsedSections.treatmentPlan} 
+                      totalFTPs={parsedSections.ftps.length} 
+                    />
+                    <ConditionGuidelinesSection guidelines={parsedSections.conditionGuidelines} />
+                    <SideEffectsSection sideEffects={parsedSections.sideEffects} />
+                  </div>
                 )}
               </div>
               
