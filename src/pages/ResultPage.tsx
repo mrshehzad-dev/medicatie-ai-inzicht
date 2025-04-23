@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -31,8 +30,7 @@ const ResultPage = () => {
     ftps: [],
     treatmentPlan: [],
     conditionGuidelines: [],
-    sideEffects: [],
-    references: []
+    sideEffects: []
   });
 
   useEffect(() => {
@@ -123,21 +121,19 @@ const ResultPage = () => {
   }, [navigate, toast]);
 
   const parseStructuredContent = (content: string) => {
-    // Initialize sections object
     const sections: any = {
       ftps: [],
       treatmentPlan: [],
       conditionGuidelines: [],
-      sideEffects: [],
-      references: []
+      sideEffects: []
     };
     
     try {
-      // Enhanced regular expressions to extract table data
-      const ftpMatch = content.match(/(?:1\.\s*FTP's|### 1\. FTP's)[\s\S]*?(?=\n\n|\n(?:2\.|###)|\n$)/);
-      const treatmentPlanMatch = content.match(/(?:2\.\s*Behandelplan|### 2\. Behandelplan)[\s\S]*?(?=\n\n|\n(?:3\.|###)|\n$)/);
-      const conditionGuidelinesMatch = content.match(/(?:3\.\s*Aandoening ↔ Richtlijn|### 3\. Aandoening ↔ Richtlijn)[\s\S]*?(?=\n\n|\n(?:4\.|###)|\n$)/);
-      const sideEffectsMatch = content.match(/(?:4\.\s*Bijwerkingenanalyse \(BATM\)|### 4\. Bijwerkingenanalyse \(BATM\))[\s\S]*?(?=\n\n|\n(?:5\.|###)|\n$)/);
+      // Enhanced regular expressions to extract table data with section headers
+      const ftpMatch = content.match(/### 1\. FTP's[\s\S]*?(?=\n### 2\.|\n$)/);
+      const treatmentPlanMatch = content.match(/### 2\. Behandelplan[\s\S]*?(?=\n### 3\.|\n$)/);
+      const conditionGuidelinesMatch = content.match(/### 3\. Aandoening ↔ Richtlijn[\s\S]*?(?=\n### 4\.|\n$)/);
+      const sideEffectsMatch = content.match(/### 4\. Bijwerkingenanalyse[\s\S]*?(?=\n### 5\.|\n$)/);
       
       // Parse FTPs
       if (ftpMatch && ftpMatch[0]) {
