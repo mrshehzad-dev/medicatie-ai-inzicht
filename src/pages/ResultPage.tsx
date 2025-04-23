@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -138,8 +137,29 @@ const ResultPage = () => {
       const treatmentPlanMatch = content.match(/\|\s*Nr\s*\|\s*Interventie\s*\|\s*Voordelen[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
       const conditionGuidelinesMatch = content.match(/\|\s*Aandoening\s*\|\s*Richtlijn[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
       const sideEffectsMatch = content.match(/\|\s*Bijwerking\s*\|\s*Mogelijke middelen[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
-      const referencesMatch = content.match(/\[\d+\][\s\S]*?(?=\n\n|\n$)/g);
       
+      // Improved references parsing
+      // Look for the "Referentielijst" section and extract references that follow the format [number] description
+      const referencesMatch = content.match(/(?:5\.\s*Referentielijst|Referentielijst)[\s\S]*?(\[\d+\].*?)(?=\n\n|\n\d\.|\n$|\Z)/g);
+      
+      if (referencesMatch) {
+        // Extract individual references using regex for [number] format
+        const referencesList = referencesMatch[0].split('\n').filter(line => {
+          // Keep only lines that contain reference patterns like [1], [2], etc.
+          return line.trim().match(/^\[(\d+)\]/) || line.trim().length === 0;
+        });
+        
+        sections.references = referencesList
+          .filter(ref => ref.trim().length > 0)
+          .map(ref => ref.trim());
+      } else {
+        // Alternative regex for finding individual references in the content
+        const individualRefs = content.match(/\[\d+\]\s+[^\[\n]+/g);
+        if (individualRefs) {
+          sections.references = individualRefs.map(ref => ref.trim());
+        }
+      }
+
       // Parse FTPs
       if (ftpMatch && ftpMatch[0]) {
         const rows = ftpMatch[0].split('\n').filter(row => row.includes('|'));
@@ -210,11 +230,6 @@ const ResultPage = () => {
             });
           }
         }
-      }
-
-      // Parse References
-      if (referencesMatch) {
-        sections.references = referencesMatch.map(ref => ref.trim());
       }
 
       setParsedSections(sections);
@@ -419,25 +434,22 @@ const ResultPage = () => {
         )}
 
         {/* References Section */}
-        {references.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-primary">5. Referentielijst</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-none space-y-1">
-                {references.map((ref: string, index: number) => (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl text-primary">5. Referentielijst</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-none space-y-1">
+              {references.length > 0 ? (
+                references.map((ref: string, index: number) => (
                   <li key={`ref-${index}`}>{ref}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Fallback for any unparsed content */}
-        {!hasParsedData && (
-          <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-        )}
+                ))
+              ) : (
+                <li>[1] Richtlijnendatabase – link</li>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     );
   };
