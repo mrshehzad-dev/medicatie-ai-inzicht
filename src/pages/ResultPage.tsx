@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -132,34 +133,12 @@ const ResultPage = () => {
     };
     
     try {
-      // Regular expressions to extract table data
-      const ftpMatch = content.match(/\|\s*Nr\s*\|\s*FTP\s*\|\s*Actuele medicatie\s*\|\s*Relevante data[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
-      const treatmentPlanMatch = content.match(/\|\s*Nr\s*\|\s*Interventie\s*\|\s*Voordelen[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
-      const conditionGuidelinesMatch = content.match(/\|\s*Aandoening\s*\|\s*Richtlijn[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
-      const sideEffectsMatch = content.match(/\|\s*Bijwerking\s*\|\s*Mogelijke middelen[\s\S]*?(?=\n\n|\n\d\.|\n$)/);
+      // Enhanced regular expressions to extract table data
+      const ftpMatch = content.match(/(?:1\.\s*FTP's|### 1\. FTP's)[\s\S]*?(?=\n\n|\n(?:2\.|###)|\n$)/);
+      const treatmentPlanMatch = content.match(/(?:2\.\s*Behandelplan|### 2\. Behandelplan)[\s\S]*?(?=\n\n|\n(?:3\.|###)|\n$)/);
+      const conditionGuidelinesMatch = content.match(/(?:3\.\s*Aandoening ↔ Richtlijn|### 3\. Aandoening ↔ Richtlijn)[\s\S]*?(?=\n\n|\n(?:4\.|###)|\n$)/);
+      const sideEffectsMatch = content.match(/(?:4\.\s*Bijwerkingenanalyse \(BATM\)|### 4\. Bijwerkingenanalyse \(BATM\))[\s\S]*?(?=\n\n|\n(?:5\.|###)|\n$)/);
       
-      // Improved references parsing
-      // Look for the "Referentielijst" section and extract references that follow the format [number] description
-      const referencesMatch = content.match(/(?:5\.\s*Referentielijst|Referentielijst)[\s\S]*?(\[\d+\].*?)(?=\n\n|\n\d\.|\n$|\Z)/g);
-      
-      if (referencesMatch) {
-        // Extract individual references using regex for [number] format
-        const referencesList = referencesMatch[0].split('\n').filter(line => {
-          // Keep only lines that contain reference patterns like [1], [2], etc.
-          return line.trim().match(/^\[(\d+)\]/) || line.trim().length === 0;
-        });
-        
-        sections.references = referencesList
-          .filter(ref => ref.trim().length > 0)
-          .map(ref => ref.trim());
-      } else {
-        // Alternative regex for finding individual references in the content
-        const individualRefs = content.match(/\[\d+\]\s+[^\[\n]+/g);
-        if (individualRefs) {
-          sections.references = individualRefs.map(ref => ref.trim());
-        }
-      }
-
       // Parse FTPs
       if (ftpMatch && ftpMatch[0]) {
         const rows = ftpMatch[0].split('\n').filter(row => row.includes('|'));
@@ -290,7 +269,7 @@ const ResultPage = () => {
   };
 
   const renderStructuredResult = () => {
-    const { ftps, treatmentPlan, conditionGuidelines, sideEffects, references } = parsedSections;
+    const { ftps, treatmentPlan, conditionGuidelines, sideEffects } = parsedSections;
     const hasParsedData = ftps.length > 0 || treatmentPlan.length > 0 || conditionGuidelines.length > 0 || sideEffects.length > 0;
     
     if (!hasParsedData) {
@@ -432,24 +411,6 @@ const ResultPage = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* References Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-primary">5. Referentielijst</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-none space-y-1">
-              {references.length > 0 ? (
-                references.map((ref: string, index: number) => (
-                  <li key={`ref-${index}`}>{ref}</li>
-                ))
-              ) : (
-                <li>[1] Richtlijnendatabase – link</li>
-              )}
-            </ul>
-          </CardContent>
-        </Card>
       </div>
     );
   };
