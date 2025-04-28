@@ -1,9 +1,39 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ButtonCTA from "@/components/ui/button-cta";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const PricingPage = () => {
+  const { user } = useAuth();
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('check-subscription');
+        
+        if (error) throw error;
+        setIsSubscribed(data?.subscribed || false);
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        toast.error('Er is een fout opgetreden bij het controleren van uw abonnement.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSubscription();
+  }, [user]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -65,9 +95,22 @@ const PricingPage = () => {
                   </li>
                 </ul>
                 
-                <ButtonCTA className="w-full justify-center">
-                  Nu kopen
-                </ButtonCTA>
+                {loading ? (
+                  <ButtonCTA className="w-full justify-center" disabled>
+                    Laden...
+                  </ButtonCTA>
+                ) : isSubscribed ? (
+                  <div className="text-center text-green-600 font-medium">
+                    U heeft een actief abonnement
+                  </div>
+                ) : (
+                  <ButtonCTA 
+                    className="w-full justify-center" 
+                    isSubscribeButton
+                  >
+                    Nu kopen
+                  </ButtonCTA>
+                )}
                 
                 <p className="text-sm text-gray-500 mt-4">
                   Niet tevreden? Geld-terug-garantie binnen 30 dagen.
