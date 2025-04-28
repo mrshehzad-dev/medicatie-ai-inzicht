@@ -46,7 +46,7 @@ serve(async (req) => {
             },
             unit_amount: 39900,
             recurring: {
-              interval: 'year',
+              interval: 'month',
             },
           },
           quantity: 1,

@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ButtonCTA from "@/components/ui/button-cta";
@@ -53,7 +54,7 @@ const PricingPage = () => {
                 
                 <div className="mb-6">
                   <span className="text-5xl font-bold">€399</span>
-                  <span className="text-gray-500">/jaar</span>
+                  <span className="text-gray-500">/maand</span>
                 </div>
                 
                 <ul className="text-left mb-8 space-y-3">
