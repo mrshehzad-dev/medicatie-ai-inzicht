@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { FormData, AgeCategory, Gender } from "@/types/form-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +18,7 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const [formData, setFormData] = useState<FormData>({
-    ageCategory: "18-60",
+    ageCategory: "" as AgeCategory,
     weight: 0,
     kidneyFunction: 0,
     gender: "Male",
