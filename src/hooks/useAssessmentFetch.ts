@@ -47,9 +47,16 @@ export const useAssessmentFetch = () => {
           const displayContent = automationResponse || content || "";
           if (displayContent) {
             console.log("Using content from localStorage");
+            console.log("Content sample:", displayContent.substring(0, 200));
             setResultContent(displayContent);
             setHtmlContent(marked.parse(displayContent) as string);
             const parsed = parseStructuredContent(displayContent);
+            console.log("Parser results:", {
+              ftps: parsed.ftps.length,
+              treatmentPlan: parsed.treatmentPlan.length,
+              guidelines: parsed.conditionGuidelines.length,
+              sideEffects: parsed.sideEffects.length
+            });
             setParsedSections(parsed);
             setRawContentFallback(
               parsed.ftps.length === 0 && 
@@ -98,6 +105,13 @@ export const useAssessmentFetch = () => {
             parsed.conditionGuidelines.length === 0 && 
             parsed.sideEffects.length === 0
           );
+          
+          // For debugging - add example data if nothing was parsed
+          if (parsed.ftps.length === 0 && assessment.report_data.includes("FTP") || 
+              assessment.report_data.includes("Hypertension")) {
+            console.log("Content contains FTP keywords but no structured data was parsed");
+            console.log("Full content for debugging:", assessment.report_data);
+          }
         } else {
           console.error("No report_data found for assessment:", assessmentId);
           toast({

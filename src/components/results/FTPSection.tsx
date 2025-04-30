@@ -15,31 +15,31 @@ export const FTPSection = ({ ftps }: { ftps: FTP[] }) => {
   if (ftps.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl text-primary">1. FTP's</CardTitle>
+    <Card className="border-gray-100 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl font-bold text-gray-900">1. FTP's</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">Nr.</TableHead>
+              <TableHead className="w-12">No.</TableHead>
               <TableHead>FTP</TableHead>
-              <TableHead>Actuele medicatie</TableHead>
-              <TableHead>Relevante data (lab, klinisch)</TableHead>
+              <TableHead>Current medication</TableHead>
+              <TableHead>Relevant data (lab, clinical)</TableHead>
               <TableHead>STOP/START</TableHead>
-              <TableHead className="w-20">Bron</TableHead>
+              <TableHead className="w-20">Source</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ftps.map((item, index) => (
               <TableRow key={`ftp-${index}`}>
-                <TableCell>{item.nr}</TableCell>
+                <TableCell className="font-medium">{item.nr}</TableCell>
                 <TableCell>{item.ftp}</TableCell>
                 <TableCell>{item.medication}</TableCell>
                 <TableCell>{item.relevantData}</TableCell>
                 <TableCell>{item.action}</TableCell>
-                <TableCell>{item.source}</TableCell>
+                <TableCell>[{item.source}]</TableCell>
               </TableRow>
             ))}
           </TableBody>

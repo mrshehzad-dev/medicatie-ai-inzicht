@@ -38,6 +38,11 @@ export const parseStructuredContent = (content: string): ParsedSections => {
     sideEffects: []
   };
   
+  if (!content || content.trim() === '') {
+    console.log("No content to parse");
+    return sections;
+  }
+  
   try {
     console.log("Starting to parse content:", content.substring(0, 100) + "...");
     
@@ -46,6 +51,7 @@ export const parseStructuredContent = (content: string): ParsedSections => {
     
     if (hasTables) {
       // Process markdown tables
+      console.log("Detected markdown tables format");
       const ftpMatch = content.match(/#+\s*1\.\s*FTP['s]*[\s\S]*?(?=\n#+\s*2\.|\n$)/i);
       const treatmentPlanMatch = content.match(/#+\s*2\.\s*Behandelplan[\s\S]*?(?=\n#+\s*3\.|\n$)/i);
       const conditionGuidelinesMatch = content.match(/#+\s*3\.\s*Aandoening[\s\S]*?(?=\n#+\s*4\.|\n$)/i);
@@ -61,6 +67,7 @@ export const parseStructuredContent = (content: string): ParsedSections => {
       // Process FTPs table
       if (ftpMatch && ftpMatch[0]) {
         const rows = ftpMatch[0].split('\n').filter(row => row.includes('|'));
+        console.log(`FTP rows found: ${rows.length}`);
         for (let i = 2; i < rows.length; i++) {
           const columns = rows[i].split('|').map(col => col.trim()).filter(col => col);
           if (columns.length >= 5) {
@@ -126,45 +133,20 @@ export const parseStructuredContent = (content: string): ParsedSections => {
         }
       }
     } else {
-      // Process raw text format
-      console.log("No markdown tables found, parsing raw text");
+      // Try to find common patterns in the text format
+      console.log("No markdown tables found, trying to parse text format");
       
-      // FTP section - Try to parse a format like: "1. FTPs | No | FTP | Current medication"
-      const ftpRegex = /(\d+)\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]*)/g;
-      let ftpMatch;
-      while ((ftpMatch = ftpRegex.exec(content)) !== null) {
-        sections.ftps.push({
-          nr: ftpMatch[1].trim(),
-          ftp: ftpMatch[2].trim(),
-          medication: ftpMatch[3].trim(),
-          relevantData: ftpMatch[4].trim(),
-          action: ftpMatch[5].trim(),
-          source: ftpMatch[6]?.trim() || ''
-        });
-      }
+      // Try to identify FTP sections using patterns
+      parsePlainTextFTPSection(content, sections);
       
-      // Treatment plan section
-      const treatmentRegex = /(\d+)\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]*)/g;
-      const treatmentSectionStart = content.indexOf("2. Treatment plan");
-      const treatmentSectionEnd = content.indexOf("3.", treatmentSectionStart);
+      // Look for treatment plan sections
+      parsePlainTextTreatmentPlanSection(content, sections);
       
-      if (treatmentSectionStart > -1) {
-        const treatmentSection = content.substring(
-          treatmentSectionStart, 
-          treatmentSectionEnd > -1 ? treatmentSectionEnd : undefined
-        );
-        
-        let treatmentMatch;
-        while ((treatmentMatch = treatmentRegex.exec(treatmentSection)) !== null) {
-          sections.treatmentPlan.push({
-            nr: treatmentMatch[1].trim(),
-            intervention: treatmentMatch[2].trim(),
-            advantages: treatmentMatch[3].trim(),
-            evaluation: treatmentMatch[4].trim(),
-            source: treatmentMatch[5]?.trim() || ''
-          });
-        }
-      }
+      // Look for condition guidelines sections
+      parsePlainTextConditionSection(content, sections);
+      
+      // Look for side effects sections
+      parsePlainTextSideEffectsSection(content, sections);
     }
     
     console.log("Parsing complete. Sections found:", {
@@ -179,3 +161,206 @@ export const parseStructuredContent = (content: string): ParsedSections => {
   
   return sections;
 };
+
+function parsePlainTextFTPSection(content: string, sections: ParsedSections) {
+  try {
+    // Look for a section that mentions FTP or starts with "1."
+    const ftpSectionMatch = content.match(/(?:1\.|FTP|FTP's).*?(?=2\.|$)/is);
+    if (ftpSectionMatch) {
+      const ftpSection = ftpSectionMatch[0];
+      console.log("Found potential FTP section:", ftpSection.substring(0, 50) + "...");
+      
+      // Look for patterns like "1. Hypertension" followed by details
+      const ftpItems = ftpSection.match(/\d+\.\s*[^\n]+/g);
+      if (ftpItems && ftpItems.length > 0) {
+        console.log(`Found ${ftpItems.length} potential FTP items`);
+        
+        ftpItems.forEach((item, index) => {
+          // Try to extract structured information
+          const numberMatch = item.match(/^(\d+)\.?\s*/);
+          const nr = numberMatch ? numberMatch[1] : String(index + 1);
+          
+          // Remove the number prefix and split by common separators
+          const cleanItem = item.replace(/^\d+\.?\s*/, '');
+          
+          // Check if we have fields separated by delimiters
+          const hasDelimiters = /[|;:]/.test(cleanItem);
+          
+          if (hasDelimiters) {
+            // Split by common delimiters
+            const parts = cleanItem.split(/[|;:]/).map(p => p.trim());
+            sections.ftps.push({
+              nr,
+              ftp: parts[0] || '',
+              medication: parts[1] || '',
+              relevantData: parts[2] || '',
+              action: parts[3] || '',
+              source: parts[4] || ''
+            });
+          } else {
+            // Try to extract based on keywords or just use the whole text
+            const actionMatch = cleanItem.match(/STOP|START|consider/i);
+            let action = '';
+            let ftp = cleanItem;
+            
+            if (actionMatch) {
+              const actionStartIndex = cleanItem.indexOf(actionMatch[0]);
+              ftp = cleanItem.substring(0, actionStartIndex).trim();
+              action = cleanItem.substring(actionStartIndex).trim();
+            }
+            
+            sections.ftps.push({
+              nr,
+              ftp,
+              medication: '',
+              relevantData: '',
+              action,
+              source: ''
+            });
+          }
+        });
+      } else {
+        // If no pattern was found, try to look for any structured data like tables
+        const lines = ftpSection.split('\n').filter(line => line.trim().length > 0 && /\d+\./.test(line));
+        lines.forEach((line, i) => {
+          const match = line.match(/(\d+)\.?\s*(.*)/);
+          if (match) {
+            sections.ftps.push({
+              nr: match[1],
+              ftp: match[2] || '',
+              medication: '',
+              relevantData: '',
+              action: '',
+              source: ''
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing plain text FTP section:", error);
+  }
+}
+
+function parsePlainTextTreatmentPlanSection(content: string, sections: ParsedSections) {
+  try {
+    // Look for a section that mentions Treatment plan or starts with "2."
+    const planSectionMatch = content.match(/(?:2\.|Treatment plan|Behandelplan).*?(?=3\.|$)/is);
+    if (planSectionMatch) {
+      const planSection = planSectionMatch[0];
+      console.log("Found potential Treatment Plan section");
+      
+      // Similar parsing logic as FTP section
+      const planItems = planSection.match(/\d+\.\s*[^\n]+/g);
+      if (planItems && planItems.length > 0) {
+        planItems.forEach((item, index) => {
+          const numberMatch = item.match(/^(\d+)\.?\s*/);
+          const nr = numberMatch ? numberMatch[1] : String(index + 1);
+          const cleanItem = item.replace(/^\d+\.?\s*/, '');
+          
+          const hasDelimiters = /[|;:]/.test(cleanItem);
+          if (hasDelimiters) {
+            const parts = cleanItem.split(/[|;:]/).map(p => p.trim());
+            sections.treatmentPlan.push({
+              nr,
+              intervention: parts[0] || '',
+              advantages: parts[1] || '',
+              evaluation: parts[2] || '',
+              source: parts[3] || ''
+            });
+          } else {
+            sections.treatmentPlan.push({
+              nr,
+              intervention: cleanItem,
+              advantages: '',
+              evaluation: '',
+              source: ''
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing plain text Treatment Plan section:", error);
+  }
+}
+
+function parsePlainTextConditionSection(content: string, sections: ParsedSections) {
+  try {
+    const conditionSectionMatch = content.match(/(?:3\.|Condition|Aandoening).*?(?=4\.|$)/is);
+    if (conditionSectionMatch) {
+      const conditionSection = conditionSectionMatch[0];
+      console.log("Found potential Condition Guidelines section");
+      
+      // Similar parsing approach
+      const conditionItems = conditionSection.match(/[^\n]+(?:\n|$)/g);
+      if (conditionItems && conditionItems.length > 0) {
+        conditionItems.forEach(item => {
+          // Skip headers or empty lines
+          if (item.match(/^(3\.|Condition|Aandoening|Guidelines|\s*$)/i)) return;
+          
+          const hasDelimiters = /[|;:]/.test(item);
+          if (hasDelimiters) {
+            const parts = item.split(/[|;:]/).map(p => p.trim());
+            sections.conditionGuidelines.push({
+              condition: parts[0] || '',
+              guideline: parts[1] || '',
+              deviation: parts[2] || ''
+            });
+          } else {
+            sections.conditionGuidelines.push({
+              condition: item.trim(),
+              guideline: '',
+              deviation: ''
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing plain text Condition Guidelines section:", error);
+  }
+}
+
+function parsePlainTextSideEffectsSection(content: string, sections: ParsedSections) {
+  try {
+    const sideEffectSectionMatch = content.match(/(?:4\.|Side Effects|Bijwerkingen).*?(?=5\.|$)/is);
+    if (sideEffectSectionMatch) {
+      const sideEffectSection = sideEffectSectionMatch[0];
+      console.log("Found potential Side Effects section");
+      
+      // Similar parsing approach
+      const sideEffectItems = sideEffectSection.match(/[^\n]+(?:\n|$)/g);
+      if (sideEffectItems && sideEffectItems.length > 0) {
+        sideEffectItems.forEach(item => {
+          // Skip headers or empty lines
+          if (item.match(/^(4\.|Side Effects|Bijwerkingen|\s*$)/i)) return;
+          
+          const hasDelimiters = /[|;:]/.test(item);
+          if (hasDelimiters) {
+            const parts = item.split(/[|;:]/).map(p => p.trim());
+            sections.sideEffects.push({
+              sideEffect: parts[0] || '',
+              medications: parts[1] || '',
+              timeline: parts[2] || '',
+              alternativeCauses: parts[3] || '',
+              monitoring: parts[4] || '',
+              source: parts[5] || ''
+            });
+          } else {
+            sections.sideEffects.push({
+              sideEffect: item.trim(),
+              medications: '',
+              timeline: '',
+              alternativeCauses: '',
+              monitoring: '',
+              source: ''
+            });
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing plain text Side Effects section:", error);
+  }
+}

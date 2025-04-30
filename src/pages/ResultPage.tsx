@@ -22,13 +22,20 @@ const ResultPage = () => {
   useEffect(() => {
     if (fetchCompleted) {
       console.log("Result content available:", !!resultContent);
-      console.log("Raw content fallback:", rawContentFallback);
+      console.log("Content length:", resultContent?.length || 0);
+      console.log("Raw content fallback needed:", rawContentFallback);
       console.log("Parsed sections:", {
         ftpsCount: parsedSections.ftps.length,
         treatmentPlanCount: parsedSections.treatmentPlan.length,
         guidelinesCount: parsedSections.conditionGuidelines.length,
         sideEffectsCount: parsedSections.sideEffects.length
       });
+      
+      if (parsedSections.ftps.length > 0) {
+        console.log("First FTP item:", parsedSections.ftps[0]);
+      } else if (resultContent) {
+        console.log("No FTPs parsed but content exists. First 100 chars:", resultContent.substring(0, 100));
+      }
     }
   }, [fetchCompleted, resultContent, parsedSections, rawContentFallback]);
 
@@ -79,6 +86,24 @@ const ResultPage = () => {
     navigate("/keuze");
   };
 
+  // Force parsing example data if no structured content was parsed but we have result content
+  useEffect(() => {
+    if (fetchCompleted && resultContent && rawContentFallback) {
+      console.log("Attempting to force parse data from content");
+      // Try to extract patterns that might be in the content but weren't detected by the parser
+      try {
+        // Example: Try to find patterns like "1. Hypertension..."
+        const ftpItems = resultContent.match(/\d+\.\s*(Hypotension|Hypertension|Elevated|Hypokalemia)[^\n]+/g);
+        if (ftpItems && ftpItems.length > 0) {
+          console.log(`Found ${ftpItems.length} potential forced FTP items`);
+          // This is just for logging, the actual parsing is done in resultParser.ts
+        }
+      } catch (e) {
+        console.error("Error in forced parsing attempt:", e);
+      }
+    }
+  }, [fetchCompleted, resultContent, rawContentFallback]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -88,7 +113,7 @@ const ResultPage = () => {
           <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold">Medicatiebeoordeling Resultaat</h1>
+                <h1 className="text-2xl md:text-3xl font-bold">Medication Review Result</h1>
                 <div className="flex space-x-4">
                   <button 
                     onClick={handleDownloadPDF}
@@ -96,15 +121,15 @@ const ResultPage = () => {
                     disabled={loading}
                   >
                     <Download className="h-5 w-5 mr-1" />
-                    PDF Downloaden
+                    Download PDF
                   </button>
                   <button 
                     onClick={() => {
                       if (navigator.clipboard && resultContent) {
                         navigator.clipboard.writeText(resultContent);
                         toast({
-                          title: "Gekopieerd",
-                          description: "Rapport is gekopieerd naar het klembord!",
+                          title: "Copied",
+                          description: "Report has been copied to clipboard!",
                         });
                       }
                     }}
@@ -112,14 +137,14 @@ const ResultPage = () => {
                     disabled={loading || !resultContent}
                   >
                     <Copy className="h-5 w-5 mr-1" />
-                    Kopiëren
+                    Copy
                   </button>
                 </div>
               </div>
               
-              <div className="rounded-lg p-6 bg-gray-50 prose max-w-none">
+              <div className="rounded-lg bg-gray-50">
                 {loading ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 p-6">
                     <Skeleton className="h-8 w-3/4" />
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -134,7 +159,7 @@ const ResultPage = () => {
                     </div>
                   </div>
                 ) : resultContent ? (
-                  <div id="report-content" className="space-y-8">
+                  <div id="report-content" className="space-y-6 p-4">
                     {parsedSections.ftps.length > 0 && <FTPSection ftps={parsedSections.ftps} />}
                     
                     {parsedSections.treatmentPlan.length > 0 && (
@@ -155,7 +180,7 @@ const ResultPage = () => {
                     {rawContentFallback && (
                       <div className="p-6 text-center bg-white rounded-lg border border-gray-200">
                         <p className="text-gray-500 mb-4">
-                          Het rapport kon niet in tabel-formaat worden verwerkt. Hieronder is de ruwe inhoud:
+                          The report could not be processed in table format. Here is the raw content:
                         </p>
                         <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm">
                           {resultContent}
@@ -165,14 +190,14 @@ const ResultPage = () => {
                   </div>
                 ) : (
                   <div className="p-6 text-center">
-                    <p className="text-lg text-gray-500">Geen resultaten gevonden</p>
+                    <p className="text-lg text-gray-500">No results found</p>
                   </div>
                 )}
               </div>
               
               <div className="mt-8 flex justify-end">
                 <ButtonCTA onClick={handleNewBeoordeling} disabled={loading}>
-                  Nieuwe beoordeling
+                  New assessment
                 </ButtonCTA>
               </div>
             </div>
