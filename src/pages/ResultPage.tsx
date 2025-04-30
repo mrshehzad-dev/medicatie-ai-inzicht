@@ -12,11 +12,24 @@ import { TreatmentPlanSection } from "@/components/results/TreatmentPlanSection"
 import { ConditionGuidelinesSection } from "@/components/results/ConditionGuidelinesSection";
 import { SideEffectsSection } from "@/components/results/SideEffectsSection";
 import { useAssessmentFetch } from "@/hooks/useAssessmentFetch";
+import { useEffect } from "react";
 
 const ResultPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { resultContent, loading, parsedSections } = useAssessmentFetch();
+  const { resultContent, loading, parsedSections, fetchCompleted } = useAssessmentFetch();
+
+  useEffect(() => {
+    if (fetchCompleted) {
+      console.log("Result content available:", !!resultContent);
+      console.log("Parsed sections:", {
+        ftpsCount: parsedSections.ftps.length,
+        treatmentPlanCount: parsedSections.treatmentPlan.length,
+        guidelinesCount: parsedSections.conditionGuidelines.length,
+        sideEffectsCount: parsedSections.sideEffects.length
+      });
+    }
+  }, [fetchCompleted, resultContent, parsedSections]);
 
   const handleDownloadPDF = () => {
     const content = document.getElementById('report-content');
@@ -119,15 +132,36 @@ const ResultPage = () => {
                       </div>
                     </div>
                   </div>
-                ) : (
+                ) : resultContent ? (
                   <div id="report-content" className="space-y-8">
-                    <FTPSection ftps={parsedSections.ftps} />
-                    <TreatmentPlanSection 
-                      treatmentPlan={parsedSections.treatmentPlan} 
-                      totalFTPs={parsedSections.ftps.length} 
-                    />
-                    <ConditionGuidelinesSection guidelines={parsedSections.conditionGuidelines} />
-                    <SideEffectsSection sideEffects={parsedSections.sideEffects} />
+                    {parsedSections.ftps.length > 0 && <FTPSection ftps={parsedSections.ftps} />}
+                    {parsedSections.treatmentPlan.length > 0 && (
+                      <TreatmentPlanSection 
+                        treatmentPlan={parsedSections.treatmentPlan} 
+                        totalFTPs={parsedSections.ftps.length} 
+                      />
+                    )}
+                    {parsedSections.conditionGuidelines.length > 0 && (
+                      <ConditionGuidelinesSection guidelines={parsedSections.conditionGuidelines} />
+                    )}
+                    {parsedSections.sideEffects.length > 0 && (
+                      <SideEffectsSection sideEffects={parsedSections.sideEffects} />
+                    )}
+                    {parsedSections.ftps.length === 0 && 
+                     parsedSections.treatmentPlan.length === 0 && 
+                     parsedSections.conditionGuidelines.length === 0 && 
+                     parsedSections.sideEffects.length === 0 && (
+                      <div className="p-6 text-center">
+                        <p className="text-gray-500">Het rapport kon niet correct verwerkt worden. Hieronder is de ruwe inhoud:</p>
+                        <div className="mt-4 p-4 bg-gray-100 rounded text-left whitespace-pre-wrap">
+                          {resultContent}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center">
+                    <p className="text-lg text-gray-500">Geen resultaten gevonden</p>
                   </div>
                 )}
               </div>
