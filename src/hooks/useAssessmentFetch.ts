@@ -18,48 +18,55 @@ export const useAssessmentFetch = () => {
     const fetchResult = async () => {
       setLoading(true);
       
-      const assessmentId = localStorage.getItem('currentAssessmentId');
-      
-      if (!assessmentId) {
-        const content = localStorage.getItem("medicatiebeoordelingResultaat");
-        const automationResponse = localStorage.getItem("automationResponse");
+      try {
+        const assessmentId = localStorage.getItem('currentAssessmentId');
         
-        if (!content && !automationResponse) {
-          toast({
-            title: "Geen resultaten gevonden",
-            description: "Er zijn geen resultaten gevonden. U wordt doorverwezen naar de startpagina.",
-            variant: "destructive",
-          });
-          navigate("/");
+        if (!assessmentId) {
+          // Try to get from localStorage if no assessmentId is found
+          const content = localStorage.getItem("medicatiebeoordelingResultaat");
+          const automationResponse = localStorage.getItem("automationResponse");
+          
+          if (!content && !automationResponse) {
+            toast({
+              title: "Geen resultaten gevonden",
+              description: "Er zijn geen resultaten gevonden. U wordt doorverwezen naar de startpagina.",
+              variant: "destructive",
+            });
+            navigate("/");
+            return;
+          }
+          
+          const displayContent = automationResponse || content;
+          if (displayContent) {
+            console.log("Using content from localStorage");
+            setResultContent(displayContent);
+            setHtmlContent(marked.parse(displayContent) as string);
+            setParsedSections(parseStructuredContent(displayContent));
+          }
+          
+          setLoading(false);
           return;
         }
         
-        const displayContent = automationResponse || content;
-        setResultContent(displayContent || "");
-        
-        if (displayContent) {
-          setHtmlContent(marked.parse(displayContent) as string);
-          setParsedSections(parseStructuredContent(displayContent));
-        }
-        
-        setLoading(false);
-        return;
-      }
-      
-      try {
+        console.log("Fetching assessment with ID:", assessmentId);
         const { data: assessment, error } = await supabase
           .from('assessments')
           .select('report_data')
           .eq('id', assessmentId)
           .maybeSingle();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
         
         if (assessment?.report_data) {
+          console.log("Assessment data fetched successfully");
           setResultContent(assessment.report_data);
           setHtmlContent(marked.parse(assessment.report_data) as string);
           setParsedSections(parseStructuredContent(assessment.report_data));
         } else {
+          console.error("No report_data found for assessment:", assessmentId);
           toast({
             title: "Geen resultaten gevonden",
             description: "Er zijn geen resultaten gevonden. U wordt doorverwezen naar de startpagina.",
@@ -76,14 +83,15 @@ export const useAssessmentFetch = () => {
           variant: "destructive",
         });
         
+        // Try fallback to localStorage if database fetch fails
         const content = localStorage.getItem("medicatiebeoordelingResultaat");
         const automationResponse = localStorage.getItem("automationResponse");
         
         if (content || automationResponse) {
           const displayContent = automationResponse || content;
-          setResultContent(displayContent || "");
-          
           if (displayContent) {
+            console.log("Using fallback content from localStorage");
+            setResultContent(displayContent);
             setHtmlContent(marked.parse(displayContent) as string);
             setParsedSections(parseStructuredContent(displayContent));
           }
@@ -91,9 +99,9 @@ export const useAssessmentFetch = () => {
           navigate("/");
           return;
         }
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     fetchResult();
