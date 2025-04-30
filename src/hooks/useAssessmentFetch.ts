@@ -14,6 +14,7 @@ export const useAssessmentFetch = () => {
   const { toast } = useToast();
   const [parsedSections, setParsedSections] = useState(parseStructuredContent(""));
   const [fetchCompleted, setFetchCompleted] = useState(false);
+  const [rawContentFallback, setRawContentFallback] = useState(false);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -48,7 +49,14 @@ export const useAssessmentFetch = () => {
             console.log("Using content from localStorage");
             setResultContent(displayContent);
             setHtmlContent(marked.parse(displayContent) as string);
-            setParsedSections(parseStructuredContent(displayContent));
+            const parsed = parseStructuredContent(displayContent);
+            setParsedSections(parsed);
+            setRawContentFallback(
+              parsed.ftps.length === 0 && 
+              parsed.treatmentPlan.length === 0 && 
+              parsed.conditionGuidelines.length === 0 && 
+              parsed.sideEffects.length === 0
+            );
           }
           
           setLoading(false);
@@ -69,9 +77,12 @@ export const useAssessmentFetch = () => {
         }
         
         if (assessment?.report_data) {
-          console.log("Assessment data fetched successfully:", assessment.report_data.substring(0, 50) + "...");
+          console.log("Assessment data fetched successfully");
+          console.log("Raw content sample:", assessment.report_data.substring(0, 200));
+          
           setResultContent(assessment.report_data);
           setHtmlContent(marked.parse(assessment.report_data) as string);
+          
           const parsed = parseStructuredContent(assessment.report_data);
           console.log("Parsed sections:", {
             ftpsCount: parsed.ftps.length,
@@ -79,7 +90,14 @@ export const useAssessmentFetch = () => {
             guidelinesCount: parsed.conditionGuidelines.length,
             sideEffectsCount: parsed.sideEffects.length
           });
+          
           setParsedSections(parsed);
+          setRawContentFallback(
+            parsed.ftps.length === 0 && 
+            parsed.treatmentPlan.length === 0 && 
+            parsed.conditionGuidelines.length === 0 && 
+            parsed.sideEffects.length === 0
+          );
         } else {
           console.error("No report_data found for assessment:", assessmentId);
           toast({
@@ -108,7 +126,14 @@ export const useAssessmentFetch = () => {
             console.log("Using fallback content from localStorage");
             setResultContent(displayContent);
             setHtmlContent(marked.parse(displayContent) as string);
-            setParsedSections(parseStructuredContent(displayContent));
+            const parsed = parseStructuredContent(displayContent);
+            setParsedSections(parsed);
+            setRawContentFallback(
+              parsed.ftps.length === 0 && 
+              parsed.treatmentPlan.length === 0 && 
+              parsed.conditionGuidelines.length === 0 && 
+              parsed.sideEffects.length === 0
+            );
           }
         } else {
           navigate("/");
@@ -129,6 +154,7 @@ export const useAssessmentFetch = () => {
     htmlContent,
     loading,
     parsedSections,
-    fetchCompleted
+    fetchCompleted,
+    rawContentFallback
   };
 };

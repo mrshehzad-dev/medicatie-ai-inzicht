@@ -17,11 +17,12 @@ import { useEffect } from "react";
 const ResultPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { resultContent, loading, parsedSections, fetchCompleted } = useAssessmentFetch();
+  const { resultContent, loading, parsedSections, fetchCompleted, rawContentFallback } = useAssessmentFetch();
 
   useEffect(() => {
     if (fetchCompleted) {
       console.log("Result content available:", !!resultContent);
+      console.log("Raw content fallback:", rawContentFallback);
       console.log("Parsed sections:", {
         ftpsCount: parsedSections.ftps.length,
         treatmentPlanCount: parsedSections.treatmentPlan.length,
@@ -29,7 +30,7 @@ const ResultPage = () => {
         sideEffectsCount: parsedSections.sideEffects.length
       });
     }
-  }, [fetchCompleted, resultContent, parsedSections]);
+  }, [fetchCompleted, resultContent, parsedSections, rawContentFallback]);
 
   const handleDownloadPDF = () => {
     const content = document.getElementById('report-content');
@@ -135,25 +136,28 @@ const ResultPage = () => {
                 ) : resultContent ? (
                   <div id="report-content" className="space-y-8">
                     {parsedSections.ftps.length > 0 && <FTPSection ftps={parsedSections.ftps} />}
+                    
                     {parsedSections.treatmentPlan.length > 0 && (
                       <TreatmentPlanSection 
                         treatmentPlan={parsedSections.treatmentPlan} 
                         totalFTPs={parsedSections.ftps.length} 
                       />
                     )}
+                    
                     {parsedSections.conditionGuidelines.length > 0 && (
                       <ConditionGuidelinesSection guidelines={parsedSections.conditionGuidelines} />
                     )}
+                    
                     {parsedSections.sideEffects.length > 0 && (
                       <SideEffectsSection sideEffects={parsedSections.sideEffects} />
                     )}
-                    {parsedSections.ftps.length === 0 && 
-                     parsedSections.treatmentPlan.length === 0 && 
-                     parsedSections.conditionGuidelines.length === 0 && 
-                     parsedSections.sideEffects.length === 0 && (
-                      <div className="p-6 text-center">
-                        <p className="text-gray-500">Het rapport kon niet correct verwerkt worden. Hieronder is de ruwe inhoud:</p>
-                        <div className="mt-4 p-4 bg-gray-100 rounded text-left whitespace-pre-wrap">
+                    
+                    {rawContentFallback && (
+                      <div className="p-6 text-center bg-white rounded-lg border border-gray-200">
+                        <p className="text-gray-500 mb-4">
+                          Het rapport kon niet in tabel-formaat worden verwerkt. Hieronder is de ruwe inhoud:
+                        </p>
+                        <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm">
                           {resultContent}
                         </div>
                       </div>
