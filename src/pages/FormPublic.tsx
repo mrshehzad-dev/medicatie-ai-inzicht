@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MedicationReviewForm from "@/components/MedicationReviewForm";
@@ -7,6 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Badge } from "@/components/ui/badge";
+import ButtonCTA from "@/components/ui/button-cta";
 
 const FormPublic = () => {
   const navigate = useNavigate();
@@ -14,8 +18,20 @@ const FormPublic = () => {
   const [progress, setProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
   const { toast } = useToast();
+  const { isSubscribed, subscriptionTier, subscriptionEnd } = useSubscription();
 
   const handleSubmit = async (data: FormData) => {
+    // Only proceed if user is subscribed - this is a fallback check
+    // The button in MedicationReviewForm should already prevent unsubscribed users
+    if (!isSubscribed) {
+      toast({
+        title: "Abonnement vereist",
+        description: "Je hebt een actief abonnement nodig om beoordelingen te genereren.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     setShowProgress(true);
     setProgress(10);
@@ -174,6 +190,38 @@ const FormPublic = () => {
               <p className="text-gray-600">
                 Vul de gegevens in voor een medicatiebeoordeling geschikt voor openbare apotheken.
               </p>
+              
+              {!isSubscribed && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-medium text-amber-800">Abonnement vereist</h3>
+                      <p className="text-amber-700 text-sm mt-1">
+                        Je hebt een actief abonnement nodig om medicatiebeoordelingen te genereren.
+                      </p>
+                    </div>
+                    <ButtonCTA 
+                      variant="primary" 
+                      isSubscribeButton={true}
+                      className="whitespace-nowrap"
+                    >
+                      Abonneren
+                    </ButtonCTA>
+                  </div>
+                </div>
+              )}
+              
+              {isSubscribed && subscriptionTier && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Badge variant="success" className="mr-2">Actief</Badge>
+                    <span className="text-green-800">
+                      {subscriptionTier} abonnement 
+                      {subscriptionEnd && ` (tot ${new Date(subscriptionEnd).toLocaleDateString()})`}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="bg-white rounded-xl shadow-md overflow-hidden">

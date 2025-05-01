@@ -1,9 +1,21 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ButtonProps {
   children: ReactNode;
@@ -15,6 +27,7 @@ interface ButtonProps {
   disabled?: boolean;
   requiresAuth?: boolean;
   isSubscribeButton?: boolean;
+  requiresSubscription?: boolean;
 }
 
 const ButtonCTA = ({
@@ -27,8 +40,10 @@ const ButtonCTA = ({
   disabled,
   requiresAuth = false,
   isSubscribeButton = false,
+  requiresSubscription = false,
 }: ButtonProps) => {
   const [loading, setLoading] = useState(false);
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   
   const baseStyles = "inline-flex items-center justify-center rounded-md px-6 py-3 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
   
@@ -41,6 +56,7 @@ const ButtonCTA = ({
   const styles = cn(baseStyles, variantStyles[variant], className);
   
   const { user } = useAuth();
+  const { isSubscribed, isLoading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
   
   // Check if we're in a valid router context
@@ -79,6 +95,18 @@ const ButtonCTA = ({
       return;
     }
     
+    if (requiresSubscription && !subscriptionLoading) {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+      
+      if (!isSubscribed) {
+        setShowSubscriptionDialog(true);
+        return;
+      }
+    }
+    
     if (requiresAuth && !user && to) {
       navigate('/auth');
     } else if (onClick) {
@@ -88,7 +116,7 @@ const ButtonCTA = ({
     }
   };
   
-  if (to && !requiresAuth && !isSubscribeButton) {
+  if (to && !requiresAuth && !isSubscribeButton && !requiresSubscription) {
     if (isRouterAvailable) {
       return (
         <Link to={to} className={styles}>
@@ -105,14 +133,34 @@ const ButtonCTA = ({
   }
   
   return (
-    <button 
-      type={type} 
-      className={styles} 
-      onClick={handleClick} 
-      disabled={disabled || loading}
-    >
-      {loading ? 'Laden...' : children}
-    </button>
+    <>
+      <button 
+        type={type} 
+        className={styles} 
+        onClick={handleClick} 
+        disabled={disabled || loading || (requiresSubscription && subscriptionLoading)}
+      >
+        {loading ? 'Laden...' : children}
+      </button>
+      
+      <AlertDialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Abonnement vereist</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt een actief abonnement nodig om deze functie te gebruiken.
+              Wil je nu een abonnement afsluiten?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubscribe}>
+              Abonnement afsluiten
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

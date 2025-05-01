@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FormData, AgeCategory, Gender } from "@/types/form-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import ButtonCTA from "@/components/ui/button-cta";
 import { AGE_CATEGORIES, FARMACOGENETICA_OPTIONS, ELEKTROLYTEN_OPTIONS, CVRM_OPTIONS, DIABETES_OPTIONS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface Props {
   type: "public" | "hospital";
@@ -17,6 +18,9 @@ interface Props {
 const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isSubscribed } = useSubscription();
+  
   const [formData, setFormData] = useState<FormData>({
     ageCategory: "" as AgeCategory,
     weight: 0,
@@ -49,17 +53,37 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Login vereist",
+        description: "Je moet ingelogd zijn om een medicatiebeoordeling te genereren.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!isSubmitting) {
       setLoading(true);
       try {
         console.log("Form submitted with data:", formData);
         
-        await onSubmit(formData);
-        
-        toast({
-          title: "Formulier verzonden",
-          description: "Uw medicatiebeoordeling wordt verwerkt.",
-        });
+        if (isSubscribed) {
+          await onSubmit(formData);
+          
+          toast({
+            title: "Formulier verzonden",
+            description: "Uw medicatiebeoordeling wordt verwerkt.",
+          });
+        } else {
+          // This should never execute directly since the button will be disabled/show dialog,
+          // but keeping as a safeguard
+          toast({
+            title: "Abonnement vereist",
+            description: "Je hebt een actief abonnement nodig om beoordelingen te genereren.",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
         console.error("Error submitting form:", error);
         toast({
@@ -297,6 +321,8 @@ const MedicationReviewForm = ({ type, onSubmit, isSubmitting = false }: Props) =
           className={isSubmitting || loading ? 'opacity-75 cursor-not-allowed' : ''} 
           type="submit"
           disabled={isSubmitting || loading}
+          requiresAuth={true}
+          requiresSubscription={true}
         >
           {isSubmitting || loading ? (
             <span className="flex items-center">
