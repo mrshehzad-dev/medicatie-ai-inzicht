@@ -12,29 +12,37 @@ export const ConditionGuidelinesSection = ({ guidelines }: { guidelines: Conditi
   if (guidelines.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl text-primary">3. Aandoening ↔ Richtlijn</CardTitle>
+    <Card className="border border-gray-200 shadow-md rounded-lg overflow-hidden mb-6">
+      <CardHeader className="bg-gradient-to-r from-green-100 to-teal-50 pb-4">
+        <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
+          <span className="bg-green-700 text-white rounded-full w-7 h-7 flex items-center justify-center mr-2 text-sm">3</span>
+          Aandoening ↔ Richtlijn
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Aandoening</TableHead>
-              <TableHead>Richtlijn­behandeling</TableHead>
-              <TableHead>Afwijking & reden</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {guidelines.map((item, index) => (
-              <TableRow key={`condition-${index}`}>
-                <TableCell>{item.condition}</TableCell>
-                <TableCell>{item.guideline}</TableCell>
-                <TableCell>{item.deviation}</TableCell>
+      <CardContent className="pt-0 p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 border-b border-gray-200">
+                <TableHead className="font-semibold text-gray-700">Aandoening</TableHead>
+                <TableHead className="font-semibold text-gray-700">Richtlijn­behandeling</TableHead>
+                <TableHead className="font-semibold text-gray-700">Afwijking & reden</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {guidelines.map((item, index) => (
+                <TableRow 
+                  key={`condition-${index}`}
+                  className={index % 2 === 0 ? "bg-white" : "bg-green-50"}
+                >
+                  <TableCell className="font-medium text-green-800">{item.condition}</TableCell>
+                  <TableCell>{item.guideline}</TableCell>
+                  <TableCell>{item.deviation}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

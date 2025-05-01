@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Download, Copy } from "lucide-react";
@@ -13,6 +12,7 @@ import { ConditionGuidelinesSection } from "@/components/results/ConditionGuidel
 import { SideEffectsSection } from "@/components/results/SideEffectsSection";
 import { useAssessmentFetch } from "@/hooks/useAssessmentFetch";
 import { useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
 
 const ResultPage = () => {
   const navigate = useNavigate();
@@ -110,17 +110,17 @@ const ResultPage = () => {
       
       <main className="flex-grow py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold">Medication Review Result</h1>
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Medication Review Result</h1>
                 <div className="flex space-x-4">
                   <button 
                     onClick={handleDownloadPDF}
-                    className="text-primary hover:text-blue-700 font-medium flex items-center"
+                    className="text-primary hover:text-blue-700 font-medium flex items-center transition-colors"
                     disabled={loading}
                   >
-                    <Download className="h-5 w-5 mr-1" />
+                    <Download className="h-5 w-5 mr-2" />
                     Download PDF
                   </button>
                   <button 
@@ -133,33 +133,26 @@ const ResultPage = () => {
                         });
                       }
                     }}
-                    className="text-primary hover:text-blue-700 font-medium flex items-center"
+                    className="text-primary hover:text-blue-700 font-medium flex items-center transition-colors"
                     disabled={loading || !resultContent}
                   >
-                    <Copy className="h-5 w-5 mr-1" />
+                    <Copy className="h-5 w-5 mr-2" />
                     Copy
                   </button>
                 </div>
               </div>
               
-              <div className="rounded-lg bg-gray-50">
+              <Separator className="my-6 bg-gray-200" />
+              
+              <div className="rounded-lg">
                 {loading ? (
-                  <div className="space-y-4 p-6">
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                    <div className="pt-4">
-                      <Skeleton className="h-6 w-1/2" />
-                      <div className="pl-4 pt-2">
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-3/4" />
-                      </div>
-                    </div>
+                  <div className="space-y-6 p-6">
+                    <Skeleton className="h-64 w-full rounded-lg" />
+                    <Skeleton className="h-48 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
                   </div>
                 ) : resultContent ? (
-                  <div id="report-content" className="space-y-6 p-4">
+                  <div id="report-content" className="space-y-6">
                     {parsedSections.ftps.length > 0 && <FTPSection ftps={parsedSections.ftps} />}
                     
                     {parsedSections.treatmentPlan.length > 0 && (
@@ -178,24 +171,22 @@ const ResultPage = () => {
                     )}
                     
                     {rawContentFallback && (
-                      <div className="p-6 text-center bg-white rounded-lg border border-gray-200">
-                        <p className="text-gray-500 mb-4">
-                          The report could not be processed in table format. Here is the raw content:
-                        </p>
-                        <div className="mt-4 p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm">
+                      <div className="p-6 rounded-lg border border-gray-200 shadow-md bg-white">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Raw Report Content</h3>
+                        <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm overflow-x-auto">
                           {resultContent}
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="p-6 text-center">
+                  <div className="p-12 text-center bg-white rounded-lg border border-gray-200 shadow">
                     <p className="text-lg text-gray-500">No results found</p>
                   </div>
                 )}
               </div>
               
-              <div className="mt-8 flex justify-end">
+              <div className="mt-10 flex justify-end">
                 <ButtonCTA onClick={handleNewBeoordeling} disabled={loading}>
                   New assessment
                 </ButtonCTA>
