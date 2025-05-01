@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { Download, Copy } from "lucide-react";
@@ -13,6 +14,8 @@ import { SideEffectsSection } from "@/components/results/SideEffectsSection";
 import { useAssessmentFetch } from "@/hooks/useAssessmentFetch";
 import { useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const ResultPage = () => {
   const navigate = useNavigate();
@@ -31,10 +34,13 @@ const ResultPage = () => {
         sideEffectsCount: parsedSections.sideEffects.length
       });
       
-      if (parsedSections.ftps.length > 0) {
-        console.log("First FTP item:", parsedSections.ftps[0]);
-      } else if (resultContent) {
-        console.log("No FTPs parsed but content exists. First 100 chars:", resultContent.substring(0, 100));
+      // Force parsing if we have content but no structured sections
+      if (resultContent && 
+          parsedSections.ftps.length === 0 &&
+          parsedSections.treatmentPlan.length === 0 &&
+          parsedSections.conditionGuidelines.length === 0 &&
+          parsedSections.sideEffects.length === 0) {
+        console.log("Warning: Content exists but no sections were parsed");
       }
     }
   }, [fetchCompleted, resultContent, parsedSections, rawContentFallback]);
@@ -86,24 +92,6 @@ const ResultPage = () => {
     navigate("/keuze");
   };
 
-  // Force parsing example data if no structured content was parsed but we have result content
-  useEffect(() => {
-    if (fetchCompleted && resultContent && rawContentFallback) {
-      console.log("Attempting to force parse data from content");
-      // Try to extract patterns that might be in the content but weren't detected by the parser
-      try {
-        // Example: Try to find patterns like "1. Hypertension..."
-        const ftpItems = resultContent.match(/\d+\.\s*(Hypotension|Hypertension|Elevated|Hypokalemia)[^\n]+/g);
-        if (ftpItems && ftpItems.length > 0) {
-          console.log(`Found ${ftpItems.length} potential forced FTP items`);
-          // This is just for logging, the actual parsing is done in resultParser.ts
-        }
-      } catch (e) {
-        console.error("Error in forced parsing attempt:", e);
-      }
-    }
-  }, [fetchCompleted, resultContent, rawContentFallback]);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -153,30 +141,43 @@ const ResultPage = () => {
                   </div>
                 ) : resultContent ? (
                   <div id="report-content" className="space-y-6">
-                    {parsedSections.ftps.length > 0 && <FTPSection ftps={parsedSections.ftps} />}
+                    {/* FTP Section */}
+                    {parsedSections.ftps.length > 0 ? (
+                      <FTPSection ftps={parsedSections.ftps} />
+                    ) : null}
                     
-                    {parsedSections.treatmentPlan.length > 0 && (
+                    {/* Treatment Plan Section */}
+                    {parsedSections.treatmentPlan.length > 0 ? (
                       <TreatmentPlanSection 
                         treatmentPlan={parsedSections.treatmentPlan} 
                         totalFTPs={parsedSections.ftps.length} 
                       />
-                    )}
+                    ) : null}
                     
-                    {parsedSections.conditionGuidelines.length > 0 && (
+                    {/* Condition Guidelines Section */}
+                    {parsedSections.conditionGuidelines.length > 0 ? (
                       <ConditionGuidelinesSection guidelines={parsedSections.conditionGuidelines} />
-                    )}
+                    ) : null}
                     
-                    {parsedSections.sideEffects.length > 0 && (
+                    {/* Side Effects Section */}
+                    {parsedSections.sideEffects.length > 0 ? (
                       <SideEffectsSection sideEffects={parsedSections.sideEffects} />
-                    )}
+                    ) : null}
                     
+                    {/* Fallback for raw content when parsing fails */}
                     {rawContentFallback && (
-                      <div className="p-6 rounded-lg border border-gray-200 shadow-md bg-white">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">Raw Report Content</h3>
-                        <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm overflow-x-auto">
-                          {resultContent}
-                        </div>
-                      </div>
+                      <Card className="border border-gray-200 shadow-md rounded-lg overflow-hidden mb-6">
+                        <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-50 pb-4">
+                          <CardTitle className="text-xl font-bold text-gray-800">
+                            Raw Report Content
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 text-left whitespace-pre-wrap text-sm overflow-x-auto">
+                            {resultContent}
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
                   </div>
                 ) : (
