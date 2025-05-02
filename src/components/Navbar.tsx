@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -117,7 +116,7 @@ const Navbar = () => {
                 
                 {!user && !loading && (
                   <div className="pt-2">
-                    <ButtonCTA to="/auth" variant="default" className="w-full justify-center">
+                    <ButtonCTA to="/auth" variant="primary" className="w-full justify-center">
                       Registreer nu
                     </ButtonCTA>
                   </div>
