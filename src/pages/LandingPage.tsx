@@ -10,16 +10,16 @@ const LandingPage = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="bg-primary text-white py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-primary text-white py-12 md:py-24 px-4">
+        <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
               Medicatiebeoordeling met AI
             </h1>
-            <p className="text-lg md:text-xl mb-8 opacity-90">
+            <p className="text-base md:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
               Revolutionaire AI-tool voor apothekers in Nederland. Voer snel en nauwkeurig medicatiebeoordelingen uit.
             </p>
-            <ButtonCTA to="/keuze" requiresAuth={true} variant="primary">
+            <ButtonCTA to="/keuze" requiresAuth={true} variant="primary" className="mx-auto">
               Aan de slag
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -30,12 +30,12 @@ const LandingPage = () => {
       </section>
       
       {/* Benefits Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Voordelen</h2>
+      <section className="py-16 bg-gray-50 px-4">
+        <div className="container mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8">Voordelen</h2>
           <p className="text-center text-lg mb-12">Waarom kiezen voor onze AI-tool?</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <Zap className="h-8 w-8 text-primary" />
@@ -64,45 +64,45 @@ const LandingPage = () => {
       </section>
       
       {/* Pricing Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Prijzen</h2>
           
           <div className="max-w-lg mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-8">
+            <div className="p-6 md:p-8">
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Volledige toegang</h3>
                 <p className="text-gray-600 mb-6">Alle functies, onbeperkt gebruik</p>
                 
                 <div className="mb-6">
-                  <span className="text-5xl font-bold">€399</span>
+                  <span className="text-4xl md:text-5xl font-bold">€399</span>
                   <span className="text-gray-500">/maand</span>
                 </div>
                 
                 <ul className="text-left mb-8 space-y-3">
                   <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    Onbeperkte medicatiebeoordelingen
+                    <span>Onbeperkte medicatiebeoordelingen</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    Exporteren naar PDF
+                    <span>Exporteren naar PDF</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    Prioritaire support
+                    <span>Prioritaire support</span>
                   </li>
                   <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    Regelmatige updates met nieuwe functies
+                    <span>Regelmatige updates met nieuwe functies</span>
                   </li>
                 </ul>
                 
