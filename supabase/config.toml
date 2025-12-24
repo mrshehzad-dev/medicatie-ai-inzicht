@@ -1,8 +1,1 @@
-
-project_id = "bmgeceixlemojtlnqxph"
-
-[functions.create-checkout]
-verify_jwt = true
-
-[functions.check-subscription]
-verify_jwt = true
+project_id = "bvmjozqrebanzouhqbzt"
